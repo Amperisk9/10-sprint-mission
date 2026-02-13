@@ -6,9 +6,11 @@ import com.sprint.mission.discodeit.dto.UserStatusDto;
 import com.sprint.mission.discodeit.entity.BinaryContentType;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.service.UserStatusService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,14 +21,14 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/user")
+@RequestMapping("/api/users")
 public class UserController {
     private final UserService userService;
     private final UserStatusService userStatusService;
 
     // 사용자 등록
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<UserDto.response> createUser(@RequestPart("user") UserDto.createRequest userReq,
+    public ResponseEntity<UserDto.response> createUser(@Valid @RequestPart("user") UserDto.createRequest userReq,
                                                        @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) throws IOException {
         BinaryContentDto.createRequest profileReq = toServiceDto(profileImage);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -72,7 +74,7 @@ public class UserController {
     }
 
     // 사용자 온라인 상태 업데이트
-    @RequestMapping(value = "/{user-id}/status", method = RequestMethod.PATCH)
+    @RequestMapping(value = "/{user-id}/userStatus", method = RequestMethod.PATCH)
     public ResponseEntity<Void> updateLastActive(@PathVariable("user-id") UUID userId) {
         userStatusService.updateUserStatusByUserId(userId,
                 new UserStatusDto.updateRequest(Instant.now()));
