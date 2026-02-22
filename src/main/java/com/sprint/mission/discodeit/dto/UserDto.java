@@ -13,9 +13,9 @@ public final class UserDto {
     public record LoginRequest(String accountId, String password) {}
     public record createRequest(String accountId, String password, @NotEmpty String username, @NotEmpty @Email String email) {}
     public record updateRequest(String accountId, String password, String username, String email) {}
-    public record response(UUID uuid, Instant createdAt, Instant updatedAt,
-                           String accountId, String username, String email,
-                           UUID profileId, boolean online,
-                           List<UUID> joinedChannels,
-                           List<UUID> messageHistory) {}
+    public record userResponse(UUID uuid, Instant createdAt, Instant updatedAt,
+                               String accountId, String username, String email,
+                               UUID profileId, boolean online,
+                               List<UUID> joinedChannels,
+                               List<UUID> messageHistory) {}
 }

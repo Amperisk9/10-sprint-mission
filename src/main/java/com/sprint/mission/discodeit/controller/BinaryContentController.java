@@ -35,6 +35,7 @@ public class BinaryContentController {
                 .body(binaryContentService.findById(binaryContentId));
     }
 
+    // TODO BODY 타입 안받게 수정해야 함
     // BinaryContent 다건 조회
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<BinaryContentDto.response>> findAllByIdIn(@RequestBody List<UUID> uuids) {

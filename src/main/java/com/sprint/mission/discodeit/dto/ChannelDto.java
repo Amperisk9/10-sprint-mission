@@ -12,7 +12,7 @@ public final class ChannelDto {
     public record createPrivateRequest(ChannelType channelType, String title, String description) {}
     public record createPublicRequest(ChannelType channelType, String title, String description) {}
     public record updatePublicRequest(String title, String description) {}
-    public record response(UUID uuid, Instant createdAt, Instant updatedAt,
-                           ChannelType channelType, String title, String description,
-                           Instant lastMessageAt, List<UUID> participantIds) {}
+    public record channelResponse(UUID uuid, Instant createdAt, Instant updatedAt,
+                                  ChannelType channelType, String title, String description,
+                                  Instant lastMessageAt, List<UUID> participantIds) {}
 }

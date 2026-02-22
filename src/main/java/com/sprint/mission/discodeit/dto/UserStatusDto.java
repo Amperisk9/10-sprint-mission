@@ -8,6 +8,6 @@ public final class UserStatusDto {
 
     public record createRequest(UUID userId) { }
     public record updateRequest(Instant lastActiveAt) { }
-    public record response(UUID uuid, Instant createdAt, Instant updatedAt,
-                           boolean isOnline) { }
+    public record userStatusResponse(UUID uuid, Instant createdAt, Instant updatedAt,
+                                     boolean isOnline) { }
 }

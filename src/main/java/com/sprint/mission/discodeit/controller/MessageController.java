@@ -54,7 +54,7 @@ public class MessageController {
 
     // 메시지 삭제
     @RequestMapping(value = "/{message-id}", method = RequestMethod.DELETE)
-    public ResponseEntity<Void> updateMessage(@PathVariable("message-id") UUID messageId) {
+    public ResponseEntity<Void> deleteMessage(@PathVariable("message-id") UUID messageId) {
         messageService.deleteMessage(messageId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
