@@ -10,8 +10,8 @@ import java.util.UUID;
 public final class ChannelDto {
     private ChannelDto() {}
 
-    public record channelCreatePrivateRequest(@JsonProperty("type") ChannelType channelType) {}
-    public record channelCreatePublicRequest(@JsonProperty("type") ChannelType channelType, @JsonProperty("name") String title, String description) {}
+    public record channelCreatePrivateRequest(List<UUID> participantIds) {}
+    public record channelCreatePublicRequest(@JsonProperty("name") String title, String description) {}
     public record channelUpdatePublicRequest(@JsonProperty("newName") String title, @JsonProperty("newDescription") String description) {}
     public record channelResponse(@JsonProperty("id") UUID uuid, Instant createdAt, Instant updatedAt,
                                   @JsonProperty("type") ChannelType channelType, @JsonProperty("name") String title, String description,

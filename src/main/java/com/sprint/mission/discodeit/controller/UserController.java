@@ -82,7 +82,7 @@ public class UserController {
     @Operation(summary = "User 정보 수정")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User 정보가 성공적으로 수정됨"),
-            @ApiResponse(responseCode = "404", description = "User를 찾을 수 없음",
+            @ApiResponse(responseCode = "400", description = "User를 찾을 수 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @RequestMapping(value = "/{user-id}", method = RequestMethod.PATCH, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -102,10 +102,10 @@ public class UserController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @RequestMapping(value = "/{user-id}/userStatus", method = RequestMethod.PATCH)
-    public ResponseEntity<Void> updateLastActive(@PathVariable("user-id") UUID userId,
-                                                 @RequestBody UserStatusDto.userStatusUpdateRequest updateReq) {
-        userStatusService.updateUserStatusByUserId(userId, updateReq);
-        return ResponseEntity.status(HttpStatus.OK).build();
+    public ResponseEntity<UserStatusDto.userStatusResponse> updateLastActive(@PathVariable("user-id") UUID userId,
+                                                                             @RequestBody UserStatusDto.userStatusUpdateRequest updateReq) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(userStatusService.updateUserStatusByUserId(userId, updateReq));
     }
 
     // 사용자 삭제

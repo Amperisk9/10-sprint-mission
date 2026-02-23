@@ -25,19 +25,25 @@ public class BasicChannelService implements ChannelService {
     @Override
     public ChannelDto.channelResponse createChannel(ChannelDto.channelCreatePrivateRequest channelPrivateReq) {
         // title과 description 불필요에 따른 title 미검증
-        Channel channel = new Channel(channelPrivateReq.channelType(), null, null);
-        channelRepository.save(channel);
-        return toResponse(channel);
+        List<UUID> participantIds = channelPrivateReq.participantIds();
+        Channel privateChannel = Channel.of(participantIds);
+
+        // ReadStatus 생성
+        participantIds.forEach(userId -> {
+            readStatusRepository.save(new ReadStatus(userId, privateChannel.getId()));
+        });
+
+        channelRepository.save(privateChannel);
+        return toResponse(privateChannel);
     }
 
     @Override
     public ChannelDto.channelResponse createChannel(ChannelDto.channelCreatePublicRequest channelPublicReq) {
         validateDuplicateTitle(channelPublicReq.title());
 
-        Channel channel = new Channel(channelPublicReq.channelType(),
-                channelPublicReq.title(), channelPublicReq.description());
-        channelRepository.save(channel);
-        return toResponse(channel);
+        Channel publicChannel = Channel.of(channelPublicReq.title(), channelPublicReq.description());
+        channelRepository.save(publicChannel);
+        return toResponse(publicChannel);
     }
 
     @Override
@@ -114,66 +120,66 @@ public class BasicChannelService implements ChannelService {
         channelRepository.deleteById(uuid);
     }
 
-    @Override
-    public void joinChannel(UUID channelId, UUID userId) {
-        Channel channel = getChannelOrThrow(channelId);
-        User user = getUserOrThrow(userId);
-
-        if (channel.getParticipants().stream()
-                .anyMatch(u -> Objects.equals(u, userId))) {
-            throw new BusinessLogicException(ErrorCode.USER_ALREADY_IN_CHANNEL);
-        }
-
-        if (user.getJoinedChannels().stream()
-                .anyMatch(u -> Objects.equals(u, channelId))) {
-            throw new BusinessLogicException(ErrorCode.USER_ALREADY_IN_CHANNEL);
-        }
-
-        channel.addParticipant(userId);
-        channel.updateUpdatedAt();
-        channelRepository.save(channel);
-
-        user.addJoinedChannels(channelId);
-        user.updateUpdatedAt();
-        userRepository.save(user);
-
-        readStatusRepository.findAllByUserId(userId).stream()
-                .filter(r -> Objects.equals(r.getChannelId(), channelId))
-                .findFirst()
-                .ifPresent(r -> { throw new BusinessLogicException(ErrorCode.READSTATUS_ALREADY_EXISTS); });
-        ReadStatus readStatus = new ReadStatus(userId, channelId);
-        readStatusRepository.save(readStatus);
-    }
-
-    @Override
-    public void leaveChannel(UUID channelId, UUID userId) {
-        Channel channel = getChannelOrThrow(channelId);
-        User user = getUserOrThrow(userId);
-
-        if (channel.getParticipants().stream()
-                .noneMatch(u -> Objects.equals(u, userId))) {
-            throw new BusinessLogicException(ErrorCode.USER_NOT_IN_CHANNEL);
-        }
-
-        if (user.getJoinedChannels().stream()
-                .noneMatch(u -> Objects.equals(u, channelId))) {
-            throw new BusinessLogicException(ErrorCode.USER_NOT_IN_CHANNEL);
-        }
-
-        channel.removeParticipant(userId);
-        channel.updateUpdatedAt();
-        channelRepository.save(channel);
-
-        user.removeJoinedChannels(channelId);
-        user.updateUpdatedAt();
-        userRepository.save(user);
-
-        ReadStatus readStatus = readStatusRepository.findAllByUserId(userId).stream()
-                .filter(r -> Objects.equals(r.getChannelId(), channelId))
-                .findFirst()
-                .orElseThrow(() -> new BusinessLogicException(ErrorCode.READSTATUS_NOT_FOUND));
-        readStatusRepository.deleteById(readStatus.getId());
-    }
+//    @Override
+//    public void joinChannel(UUID channelId, UUID userId) {
+//        Channel channel = getChannelOrThrow(channelId);
+//        User user = getUserOrThrow(userId);
+//
+//        if (channel.getParticipants().stream()
+//                .anyMatch(u -> Objects.equals(u, userId))) {
+//            throw new BusinessLogicException(ErrorCode.USER_ALREADY_IN_CHANNEL);
+//        }
+//
+//        if (user.getJoinedChannels().stream()
+//                .anyMatch(u -> Objects.equals(u, channelId))) {
+//            throw new BusinessLogicException(ErrorCode.USER_ALREADY_IN_CHANNEL);
+//        }
+//
+//        channel.addParticipant(userId);
+//        channel.updateUpdatedAt();
+//        channelRepository.save(channel);
+//
+//        user.addJoinedChannels(channelId);
+//        user.updateUpdatedAt();
+//        userRepository.save(user);
+//
+//        readStatusRepository.findAllByUserId(userId).stream()
+//                .filter(r -> Objects.equals(r.getChannelId(), channelId))
+//                .findFirst()
+//                .ifPresent(r -> { throw new BusinessLogicException(ErrorCode.READSTATUS_ALREADY_EXISTS); });
+//        ReadStatus readStatus = new ReadStatus(userId, channelId);
+//        readStatusRepository.save(readStatus);
+//    }
+//
+//    @Override
+//    public void leaveChannel(UUID channelId, UUID userId) {
+//        Channel channel = getChannelOrThrow(channelId);
+//        User user = getUserOrThrow(userId);
+//
+//        if (channel.getParticipants().stream()
+//                .noneMatch(u -> Objects.equals(u, userId))) {
+//            throw new BusinessLogicException(ErrorCode.USER_NOT_IN_CHANNEL);
+//        }
+//
+//        if (user.getJoinedChannels().stream()
+//                .noneMatch(u -> Objects.equals(u, channelId))) {
+//            throw new BusinessLogicException(ErrorCode.USER_NOT_IN_CHANNEL);
+//        }
+//
+//        channel.removeParticipant(userId);
+//        channel.updateUpdatedAt();
+//        channelRepository.save(channel);
+//
+//        user.removeJoinedChannels(channelId);
+//        user.updateUpdatedAt();
+//        userRepository.save(user);
+//
+//        ReadStatus readStatus = readStatusRepository.findAllByUserId(userId).stream()
+//                .filter(r -> Objects.equals(r.getChannelId(), channelId))
+//                .findFirst()
+//                .orElseThrow(() -> new BusinessLogicException(ErrorCode.READSTATUS_NOT_FOUND));
+//        readStatusRepository.deleteById(readStatus.getId());
+//    }
 
     private void validateDuplicateTitle(String title) {
         channelRepository.findAll().stream()
