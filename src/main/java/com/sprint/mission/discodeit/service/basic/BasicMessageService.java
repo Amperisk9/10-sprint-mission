@@ -39,7 +39,8 @@ public class BasicMessageService implements MessageService {
         User author = getUserOrThrow(messageReq.authorId());
 
         // 참여여부 확인
-        if (channel.getParticipants().stream().noneMatch(u -> Objects.equals(u, messageReq.authorId()))) {
+        if (channel.getChannelType() == ChannelType.PRIVATE
+                && channel.getParticipants().stream().noneMatch(u -> Objects.equals(u, messageReq.authorId()))) {
             throw new BusinessLogicException(ErrorCode.MESSAGE_WRITE_FORBIDDEN);
         }
 

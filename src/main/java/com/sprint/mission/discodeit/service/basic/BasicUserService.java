@@ -32,8 +32,8 @@ public class BasicUserService implements UserService {
     @Override
     public UserDto.userResponse createUser(UserDto.userCreateRequest userReq, BinaryContentDto.binaryContentCreateRequest profileReq) {
         userRepository.findAll().forEach(u -> {
-            if (Objects.equals(u.getUsername(), userReq.username())) throw new BusinessLogicException(ErrorCode.USER_NOT_FOUND);
-            if (Objects.equals(u.getEmail(), userReq.email())) throw new BusinessLogicException(ErrorCode.USER_NOT_FOUND);
+            if (Objects.equals(u.getUsername(), userReq.username())) throw new BusinessLogicException(ErrorCode.DUPLICATE_USER);
+            if (Objects.equals(u.getEmail(), userReq.email())) throw new BusinessLogicException(ErrorCode.DUPLICATE_USER);
         });
 
         User user = new User(userReq.username(), userReq.password(), userReq.email());
@@ -134,9 +134,7 @@ public class BasicUserService implements UserService {
 
         return new UserDto.userResponse(user.getId(), user.getCreatedAt(), user.getUpdatedAt(),
                 user.getUsername(), user.getEmail(),
-                user.getProfileId(), online,
-                user.getJoinedChannels().stream().toList(),
-                user.getMessageHistory());
+                user.getProfileId(), online);
     }
 
     private void processUpdateProfile(User user, BinaryContentDto.binaryContentCreateRequest profileReq) {

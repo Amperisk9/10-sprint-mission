@@ -16,7 +16,5 @@ public final class UserDto {
                                     @JsonProperty("newEmail") String email) {}
     public record userResponse(@JsonProperty("id") UUID uuid, Instant createdAt, Instant updatedAt,
                                String username, String email,
-                               UUID profileId, boolean online,
-                               List<UUID> joinedChannels,
-                               List<UUID> messageHistory) {}
+                               UUID profileId, boolean online) {}
 }

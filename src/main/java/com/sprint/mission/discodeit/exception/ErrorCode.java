@@ -6,6 +6,7 @@ import lombok.Getter;
 public enum ErrorCode {
     // User
     USER_NOT_FOUND(404, "사용자를 찾을 수 없습니다"),
+    DUPLICATE_USER(400, "중복된 user입니다"),
     DUPLICATE_USERNAME(400, "중복된 username입니다"),
     DUPLICATE_EMAIL(400, "중복된 email입니다"),
 

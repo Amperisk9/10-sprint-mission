@@ -26,6 +26,12 @@ public class BasicChannelService implements ChannelService {
     public ChannelDto.channelResponse createChannel(ChannelDto.channelCreatePrivateRequest channelPrivateReq) {
         // title과 description 불필요에 따른 title 미검증
         List<UUID> participantIds = channelPrivateReq.participantIds();
+
+        // 참여자 목록의 유저가 user DB에 있는지 확인
+        participantIds.forEach(userId -> {
+            userRepository.findById(userId)
+                    .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
+        });
         Channel privateChannel = Channel.of(participantIds);
 
         // ReadStatus 생성

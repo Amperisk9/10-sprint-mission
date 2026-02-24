@@ -8,6 +8,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+//    @ExceptionHandler
+//    public ResponseEntity<ErrorResponse> handleException(Exception e) {
+//        e.printStackTrace();
+//        ErrorResponse errorResponse = ErrorResponse.of(500, "Internal Server Error", "예상치 못한 오류입니다");
+//        return ResponseEntity.status(errorResponse.getStatus()).body(errorResponse);
+//    }
+
     @ExceptionHandler
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         ErrorResponse errorResponse = ErrorResponse.of(

@@ -8,6 +8,7 @@ import com.sprint.mission.discodeit.exception.ErrorResponse;
 import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.service.UserStatusService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -41,7 +42,8 @@ public class UserController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<UserDto.userResponse> createUser(@Valid @RequestPart("userCreateRequest") UserDto.userCreateRequest userReq,
+    public ResponseEntity<UserDto.userResponse> createUser(@Parameter(content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.userCreateRequest.class)))
+                                                           @RequestPart("userCreateRequest") @Valid UserDto.userCreateRequest userReq,
                                                            @RequestPart(value = "profile", required = false) MultipartFile profileImage) throws IOException {
         BinaryContentDto.binaryContentCreateRequest profileReq = toServiceDto(profileImage);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -87,7 +89,8 @@ public class UserController {
     })
     @RequestMapping(value = "/{user-id}", method = RequestMethod.PATCH, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<UserDto.userResponse> updateUser(@PathVariable("user-id") UUID userId,
-                                                           @RequestPart("userUpdateRequest") UserDto.userUpdateRequest userReq,
+                                                           @Parameter(content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.userUpdateRequest.class)))
+                                                           @RequestPart("userUpdateRequest") @Valid UserDto.userUpdateRequest userReq,
                                                            @RequestPart(value = "profile", required = false) MultipartFile profileImage) throws IOException {
         BinaryContentDto.binaryContentCreateRequest profileReq = toServiceDto(profileImage);
         return ResponseEntity.status(HttpStatus.OK)

@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,7 +31,7 @@ public class BinaryContentController {
     // BinaryContent 생성
     @Operation(summary = "첨부 파일 생성")
     @ApiResponse(responseCode = "201", description = "첨부 파일이 성공적으로 생성됨")
-    @RequestMapping(method = RequestMethod.POST)
+    @RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BinaryContentDto.binaryContentResponse> createBinaryContent(@RequestPart("file") MultipartFile attachment) throws IOException {
 
         BinaryContentDto.binaryContentCreateRequest createReq = toServiceDto(attachment);
