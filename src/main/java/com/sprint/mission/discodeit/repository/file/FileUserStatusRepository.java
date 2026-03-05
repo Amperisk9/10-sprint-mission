@@ -33,7 +33,7 @@ public class FileUserStatusRepository extends FileSerializerDeserializer<UserSta
     @Override
     public Optional<UserStatus> findByUserId(UUID userId) {
         return findAll().stream()
-                .filter(us -> Objects.equals(us.getUserId(), userId))
+                .filter(us -> Objects.equals(us.getUser(), userId))
                 .findFirst();
     }
 
@@ -50,7 +50,7 @@ public class FileUserStatusRepository extends FileSerializerDeserializer<UserSta
     @Override
     public void deleteByUserId(UUID userId) {
         findAll().stream()
-                .filter(us -> Objects.equals(us.getUserId(), userId))
+                .filter(us -> Objects.equals(us.getUser(), userId))
                 .findFirst()
                 .ifPresent(us -> deleteById(us.getId()));
     }

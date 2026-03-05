@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.ChannelDto;
 import com.sprint.mission.discodeit.entity.*;
+import com.sprint.mission.discodeit.entity.base.BaseEntity;
 import com.sprint.mission.discodeit.exception.BusinessLogicException;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.repository.*;
@@ -62,7 +63,7 @@ public class BasicChannelService implements ChannelService {
     @Override
     public ChannelDto.channelResponse findChannelByTitle(String title) {
         return channelRepository.findAll().stream()
-                .filter(c -> Objects.equals(c.getTitle(), title))
+                .filter(c -> Objects.equals(c.getName(), title))
                 .map(this::toResponse)
                 .findFirst()
                 .orElseThrow(() -> new BusinessLogicException(ErrorCode.CHANNEL_NOT_FOUND));
@@ -74,7 +75,7 @@ public class BasicChannelService implements ChannelService {
 
         return channelRepository.findAll().stream()
                 // PUBLIC 채널 전부 + userId가 참여한 PRIVATE 채널
-                .filter(c -> Objects.equals(c.getChannelType(), ChannelType.PUBLIC)
+                .filter(c -> Objects.equals(c.getType(), ChannelType.PUBLIC)
                                 || c.getParticipants().contains(userId))
                 .map(this::toResponse)
                 .toList();
@@ -84,15 +85,15 @@ public class BasicChannelService implements ChannelService {
     public ChannelDto.channelResponse updateChannel(UUID uuid, ChannelDto.channelUpdatePublicRequest channelReq) {
         Channel channel = getChannelOrThrow(uuid);
 
-        if (channel.getChannelType() == ChannelType.PRIVATE) {
+        if (channel.getType() == ChannelType.PRIVATE) {
             throw new BusinessLogicException(ErrorCode.PRIVATE_CHANNEL_NOT_EDITABLE);
         }
 
         // title 중복성 검사
-        if (channelReq.title() != null && !Objects.equals(channel.getTitle(), channelReq.title()))
+        if (channelReq.title() != null && !Objects.equals(channel.getName(), channelReq.title()))
             validateDuplicateTitle(channelReq.title());
 
-        Optional.ofNullable(channelReq.title()).ifPresent(channel::updateTitle);
+        Optional.ofNullable(channelReq.title()).ifPresent(channel::updateName);
         Optional.ofNullable(channelReq.description()).ifPresent(channel::updateDescription);
         channel.updateUpdatedAt();
         channelRepository.save(channel);
@@ -116,7 +117,7 @@ public class BasicChannelService implements ChannelService {
 
         // 메시지 내부의 첨부파일 삭제
         messageRepository.findAllByChannelId(channel.getId())
-            .forEach(m -> m.getAttachmentIds()
+            .forEach(m -> m.getAttachments()
                     .forEach(bcId -> {
                         m.removeAttachmentId(bcId);
                         binaryContentRepository.deleteById(bcId);
@@ -189,7 +190,7 @@ public class BasicChannelService implements ChannelService {
 
     private void validateDuplicateTitle(String title) {
         channelRepository.findAll().stream()
-                .filter(c -> Objects.equals(c.getTitle(), title))
+                .filter(c -> Objects.equals(c.getName(), title))
                 .findFirst()
                 .ifPresent(u -> { throw new BusinessLogicException(ErrorCode.DUPLICATE_TITLE); });
     }
@@ -213,12 +214,12 @@ public class BasicChannelService implements ChannelService {
                 .orElse(null);
 
         List<UUID> participantIds = new ArrayList<>();
-        if (channel.getChannelType() == ChannelType.PRIVATE) {
+        if (channel.getType() == ChannelType.PRIVATE) {
             participantIds = channel.getParticipants().stream().toList();
         }
 
         return new ChannelDto.channelResponse(channel.getId(), channel.getCreatedAt(), channel.getUpdatedAt(),
-                channel.getChannelType(), channel.getTitle(), channel.getDescription(),
+                channel.getType(), channel.getName(), channel.getDescription(),
                 participantIds, lastMessageAt);
     }
 }

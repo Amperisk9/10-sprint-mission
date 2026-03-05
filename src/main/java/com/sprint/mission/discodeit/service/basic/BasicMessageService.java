@@ -39,7 +39,7 @@ public class BasicMessageService implements MessageService {
         User author = getUserOrThrow(messageReq.authorId());
 
         // 참여여부 확인
-        if (channel.getChannelType() == ChannelType.PRIVATE
+        if (channel.getType() == ChannelType.PRIVATE
                 && channel.getParticipants().stream().noneMatch(u -> Objects.equals(u, messageReq.authorId()))) {
             throw new BusinessLogicException(ErrorCode.MESSAGE_WRITE_FORBIDDEN);
         }
@@ -108,7 +108,7 @@ public class BasicMessageService implements MessageService {
         Message msg = messageRepository.findById(uuid)
                 .orElseThrow(() -> new BusinessLogicException(ErrorCode.MESSAGE_NOT_FOUND));
         Channel channel = getChannelOrThrow(msg.getChannelId());
-        User author = getUserOrThrow(msg.getAuthorId());
+        User author = getUserOrThrow(msg.getAuthor());
 
         author.removeMessageHistory(msg.getId());
         author.updateUpdatedAt();
@@ -119,7 +119,7 @@ public class BasicMessageService implements MessageService {
         channelRepository.save(channel);
 
         // 메시지에 있는 첨부파일 삭제
-        deleteAttachmentIfExists(List.copyOf(msg.getAttachmentIds()));
+        deleteAttachmentIfExists(List.copyOf(msg.getAttachments()));
 
         messageRepository.deleteById(uuid);
     }
@@ -152,7 +152,7 @@ public class BasicMessageService implements MessageService {
 
     private MessageDto.messageResponse toResponse(Message msg) {
         return new MessageDto.messageResponse(msg.getId(), msg.getCreatedAt(), msg.getUpdatedAt(),
-                msg.getChannelId(), msg.getAuthorId(),
-                msg.getMessage(), msg.getAttachmentIds());
+                msg.getChannelId(), msg.getAuthor(),
+                msg.getContent(), msg.getAttachments());
     }
 }

@@ -1,6 +1,6 @@
 package com.sprint.mission.discodeit.extend;
 
-import com.sprint.mission.discodeit.entity.BaseEntity;
+import com.sprint.mission.discodeit.entity.base.BaseEntity;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.*;

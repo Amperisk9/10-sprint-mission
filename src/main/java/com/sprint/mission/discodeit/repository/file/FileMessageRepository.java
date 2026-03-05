@@ -33,7 +33,7 @@ public class FileMessageRepository extends FileSerializerDeserializer<Message> i
     @Override
     public List<Message> findAllByChannelId(UUID channelId) {
         return super.loadAll(MESSAGE_DATA_DIRECTORY).stream()
-                .filter(m -> Objects.equals(m.getChannelId(), channelId))
+                .filter(m -> Objects.equals(m.getChannel().getId(), channelId))
                 .toList();
     }
 
