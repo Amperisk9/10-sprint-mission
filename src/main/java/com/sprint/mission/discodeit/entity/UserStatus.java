@@ -12,7 +12,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 @Entity
-@NoArgsConstructor
+@NoArgsConstructor(access = )
 @Getter
 public class UserStatus extends BaseUpdatableEntity {
     private static final long ONLINE_TIME_OUT_MS = 5 * 60_000;  // 5분
@@ -23,6 +23,8 @@ public class UserStatus extends BaseUpdatableEntity {
 
     @Column(nullable = false)
     private Instant lastActiveAt;
+
+
 
     public UserStatus(User user) {
         super();
