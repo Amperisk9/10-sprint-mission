@@ -54,22 +54,7 @@ public class BasicChannelService implements ChannelService {
         return toResponse(publicChannel);
     }
 
-    @Override
-    public ChannelDto findChannel(UUID uuid) {
-        return channelRepository.findById(uuid)
-                .map(this::toResponse)
-                .orElseThrow(() -> new BusinessLogicException(ErrorCode.CHANNEL_NOT_FOUND));
-    }
-
-    @Override
-    public ChannelDto findChannelByTitle(String title) {
-        return channelRepository.findAll().stream()
-                .filter(c -> Objects.equals(c.getName(), title))
-                .map(this::toResponse)
-                .findFirst()
-                .orElseThrow(() -> new BusinessLogicException(ErrorCode.CHANNEL_NOT_FOUND));
-    }
-
+    @Transactional(readOnly = true)
     @Override
     public List<ChannelDto> findAllByUserId(UUID userId) {
         getUserOrThrow(userId);

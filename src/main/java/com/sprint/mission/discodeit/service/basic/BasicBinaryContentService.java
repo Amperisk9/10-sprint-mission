@@ -10,12 +10,14 @@ import com.sprint.mission.discodeit.service.BinaryContentService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class BasicBinaryContentService implements BinaryContentService {
     private final BinaryContentRepository binaryContentRepository;
@@ -30,6 +32,7 @@ public class BasicBinaryContentService implements BinaryContentService {
         return toResponse(content);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public BinaryContentDto findById(UUID uuid) {
         return binaryContentRepository.findById(uuid)
@@ -37,6 +40,7 @@ public class BasicBinaryContentService implements BinaryContentService {
                 .orElseThrow(() -> new BusinessLogicException(ErrorCode.BINARYCONTENT_NOT_FOUND));
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<BinaryContentDto> findAllByIdIn(List<UUID> uuids) {
         return binaryContentRepository.findAllByIdIn(uuids).stream()

@@ -11,21 +11,18 @@ import com.sprint.mission.discodeit.service.UserService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class BasicUserService implements UserService {
     private final UserRepository userRepository;
-    private final UserStatusRepository userStatusRepository;
     private final BinaryContentRepository binaryContentRepository;
     private final BinaryContentStorage binaryContentStorage;
-    private final ChannelRepository channelRepository;
     private final UserMapper mapper;
 
     @Override
@@ -49,28 +46,7 @@ public class BasicUserService implements UserService {
         return toDto(user);
     }
 
-
-    @Override
-    public UserDto findUser(UUID uuid) {
-        return userRepository.findById(uuid)
-                .map(this::toDto)
-                .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
-    }
-
-    @Override
-    public UserDto findUserByUsername(String username) {
-        return findUserEntityByUsername(username)
-                .map(this::toDto)
-                .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
-    }
-
-    @Override
-    public UserDto findUserByEmail(String email) {
-        return findUserEntityByEmail(email)
-                .map(this::toDto)
-                .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
-    }
-
+    @Transactional(readOnly = true)
     @Override
     public List<UserDto> findAllUsers() {
         return userRepository.findAll().stream()
@@ -128,21 +104,6 @@ public class BasicUserService implements UserService {
         binaryContentStorage.put(content.getId(), req.bytes());
 
         user.updateProfile(content);
-    }
-
-    private void deleteProfileIfExists(UUID profileId, Path dir) {
-        // TODO: BinaryContentStorage 이후 처리 해야 함
-        if (profileId != null) {
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, profileId + ".*")) {
-                for (Path p : stream) {
-                    Files.deleteIfExists(p);
-                    break;
-                }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            binaryContentRepository.deleteById(profileId);
-        }
     }
 
     private Optional<User> findUserEntityByUsername(String username) {

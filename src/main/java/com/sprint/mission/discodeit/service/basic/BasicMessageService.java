@@ -56,13 +56,7 @@ public class BasicMessageService implements MessageService {
         return toResponse(msg);
     }
 
-    @Override
-    public MessageDto findMessage(UUID uuid) {
-        return messageRepository.findById(uuid)
-                .map(this::toResponse)
-                .orElseThrow(() -> new BusinessLogicException(ErrorCode.MESSAGE_NOT_FOUND));
-    }
-
+    @Transactional(readOnly = true)
     @Override
     public PageResponse<MessageDto> findAllByChannelId(UUID channelId, Object cursor, Pageable pageable) {
         Pageable sizePlusOne = PageRequest.of(0, pageable.getPageSize() + 1, pageable.getSort());

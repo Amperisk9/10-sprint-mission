@@ -13,12 +13,14 @@ import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ReadStatusService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class BasicReadStatusService implements ReadStatusService {
     private final ReadStatusRepository readStatusRepository;
@@ -43,6 +45,7 @@ public class BasicReadStatusService implements ReadStatusService {
         return toResponse(readStatus);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ReadStatusDto findById(UUID uuid) {
         ReadStatus readStatus = readStatusRepository.findById(uuid)
@@ -51,6 +54,7 @@ public class BasicReadStatusService implements ReadStatusService {
         return toResponse(readStatus);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<ReadStatusDto> findAllByUserId(UUID userId) {
         userRepository.findById(userId)

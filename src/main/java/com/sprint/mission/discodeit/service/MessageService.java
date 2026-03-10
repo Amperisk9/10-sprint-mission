@@ -12,7 +12,6 @@ import java.util.UUID;
 public interface MessageService {
     MessageDto createMessage(MessageDto.MessageCreateRequest messageReq,
                              List<BinaryContentDto.BinaryContentCreateRequest> contentReqs) throws IOException;
-    MessageDto findMessage(UUID uuid);
     PageResponse<MessageDto> findAllByChannelId(UUID channelId, Object cursor, Pageable pageable);
     MessageDto updateMessage(UUID uuid, MessageDto.MessageUpdateRequest messageReq);
     void deleteMessage(UUID uuid) throws IOException;

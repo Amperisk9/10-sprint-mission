@@ -9,9 +9,6 @@ import java.util.UUID;
 
 public interface UserService {
     UserDto createUser(UserDto.UserCreateRequest userReq, BinaryContentDto.BinaryContentCreateRequest profileReq) throws IOException;
-    UserDto findUser(UUID uuid);
-    UserDto findUserByUsername(String username);
-    UserDto findUserByEmail(String mail);
     List<UserDto> findAllUsers();
     UserDto updateUser(UUID uuid, UserDto.UserUpdateRequest userReq, BinaryContentDto.BinaryContentCreateRequest profileReq) throws IOException;
     void deleteUser(UUID uuid);
