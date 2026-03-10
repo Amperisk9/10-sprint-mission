@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.service.basic;
 
-import com.sprint.mission.discodeit.dto.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.*;
 import com.sprint.mission.discodeit.exception.BusinessLogicException;
@@ -12,6 +11,7 @@ import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
@@ -26,7 +26,7 @@ public class BasicUserService implements UserService {
     private final UserMapper mapper;
 
     @Override
-    public UserDto createUser(UserDto.UserCreateRequest userReq, BinaryContentDto.BinaryContentCreateRequest profileReq) throws IOException {
+    public UserDto createUser(UserDto.UserCreateRequest userReq, MultipartFile profileImage) throws IOException {
         userRepository.findAll().forEach(u -> {
             if (Objects.equals(u.getUsername(), userReq.username())) throw new BusinessLogicException(ErrorCode.DUPLICATE_USER);
             if (Objects.equals(u.getEmail(), userReq.email())) throw new BusinessLogicException(ErrorCode.DUPLICATE_USER);
@@ -40,7 +40,7 @@ public class BasicUserService implements UserService {
 
         // profile 이미지를 같이 추가하면
         // TODO: BinaryContentStorage 이후 처리 해야 함
-        processUpdateProfile(user, profileReq);
+        processUpdateProfile(user, profileImage);
         userRepository.save(user);
 
         return toDto(user);
@@ -54,7 +54,7 @@ public class BasicUserService implements UserService {
     }
 
     @Override
-    public UserDto updateUser(UUID uuid, UserDto.UserUpdateRequest userReq, BinaryContentDto.BinaryContentCreateRequest profileReq) throws IOException{
+    public UserDto updateUser(UUID uuid, UserDto.UserUpdateRequest userReq, MultipartFile profileImage) throws IOException{
         User user = userRepository.findById(uuid)
                 .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
 
@@ -69,7 +69,7 @@ public class BasicUserService implements UserService {
         Optional.ofNullable(userReq.newEmail()).ifPresent(user::updateEmail);
 
         // 변경되는 프로필 이미지가 있으면
-        processUpdateProfile(user, profileReq);
+        processUpdateProfile(user, profileImage);
 
         userRepository.save(user);
 
@@ -95,13 +95,14 @@ public class BasicUserService implements UserService {
         return mapper.toDto(user);
     }
 
-    private void processUpdateProfile(User user, BinaryContentDto.BinaryContentCreateRequest req) throws IOException {
-        if (req == null) return;
+    private void processUpdateProfile(User user, MultipartFile profileImage) throws IOException {
+        if (profileImage == null) return;
 
         // BinaryContent 생성
-        BinaryContent content = new BinaryContent(req.filename(), req.bytes().length, req.contentType());
+        BinaryContent content = new BinaryContent(
+                profileImage.getOriginalFilename(), profileImage.getSize(), profileImage.getContentType());
         binaryContentRepository.save(content);
-        binaryContentStorage.put(content.getId(), req.bytes());
+        binaryContentStorage.put(content.getId(), profileImage.getBytes());
 
         user.updateProfile(content);
     }

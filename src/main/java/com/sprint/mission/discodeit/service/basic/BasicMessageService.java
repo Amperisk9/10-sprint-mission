@@ -19,6 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -38,16 +39,17 @@ public class BasicMessageService implements MessageService {
 
     @Override
     public MessageDto createMessage(MessageDto.MessageCreateRequest messageReq,
-                                    List<BinaryContentDto.BinaryContentCreateRequest> contentReqs) throws IOException {
+                                    List<MultipartFile> attachments) throws IOException {
         Channel channel = getChannelOrThrow(messageReq.channelId());
         User author = getUserOrThrow(messageReq.authorId());
-
         Message msg = new Message(channel, author, messageReq.content());
-        if (contentReqs != null) {
-            for (var req : contentReqs) {
-                BinaryContent content = new BinaryContent(req.filename(), req.bytes().length, req.contentType());
+
+        if (attachments != null) {
+            for (MultipartFile attachment: attachments) {
+                BinaryContent content = new BinaryContent(
+                        attachment.getOriginalFilename(), attachment.getSize(), attachment.getContentType());
                 binaryContentRepository.save(content);
-                binaryContentStorage.put(content.getId(), req.bytes());
+                binaryContentStorage.put(content.getId(), attachment.getBytes());
                 msg.addAttachment(content);
             }
         }

@@ -11,6 +11,7 @@ import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -25,10 +26,13 @@ public class BasicBinaryContentService implements BinaryContentService {
     private final BinaryContentMapper mapper;
 
     @Override
-    public BinaryContentDto create(BinaryContentDto.BinaryContentCreateRequest req) throws IOException {
-        BinaryContent content = new BinaryContent(req.filename(), req.bytes().length, req.contentType());
+    public BinaryContentDto create(MultipartFile attachment) throws IOException {
+        if (attachment == null) return null;
+
+        BinaryContent content = new BinaryContent(attachment.getOriginalFilename(),
+                attachment.getSize(), attachment.getContentType());
         binaryContentRepository.save(content);
-        binaryContentStorage.put(content.getId(),req.bytes());
+        binaryContentStorage.put(content.getId(), attachment.getBytes());
         return toResponse(content);
     }
 

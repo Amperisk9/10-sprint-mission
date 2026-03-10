@@ -44,9 +44,8 @@ public class UserController {
     public ResponseEntity<UserDto> createUser(@Parameter(content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.UserCreateRequest.class)))
                                                            @RequestPart("userCreateRequest") @Valid UserDto.UserCreateRequest userReq,
                                                            @RequestPart(value = "profile", required = false) MultipartFile profileImage) throws IOException {
-        BinaryContentDto.BinaryContentCreateRequest profileReq = toServiceDto(profileImage);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(userService.createUser(userReq, profileReq));
+                .body(userService.createUser(userReq, profileImage));
     }
 
     // 사용자 다중 조회
@@ -70,9 +69,8 @@ public class UserController {
                                               @Parameter(content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDto.UserUpdateRequest.class)))
                                               @RequestPart("userUpdateRequest") @Valid UserDto.UserUpdateRequest userReq,
                                               @RequestPart(value = "profile", required = false) MultipartFile profileImage) throws IOException {
-        BinaryContentDto.BinaryContentCreateRequest profileReq = toServiceDto(profileImage);
         return ResponseEntity.status(HttpStatus.OK)
-                .body(userService.updateUser(userId, userReq, profileReq));
+                .body(userService.updateUser(userId, userReq, profileImage));
     }
 
     // 사용자 온라인 상태 업데이트
@@ -100,12 +98,5 @@ public class UserController {
     public ResponseEntity<Void> deleteUser(@PathVariable("user-id") UUID userId) {
         userService.deleteUser(userId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-    }
-
-    private BinaryContentDto.BinaryContentCreateRequest toServiceDto(MultipartFile profileImage) throws IOException {
-        if (profileImage == null) return null;
-
-        return new BinaryContentDto.BinaryContentCreateRequest(profileImage.getContentType(),
-                profileImage.getOriginalFilename(), profileImage.getBytes());
     }
 }

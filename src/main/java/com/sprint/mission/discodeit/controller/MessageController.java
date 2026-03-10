@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.controller;
 
-import com.sprint.mission.discodeit.dto.BinaryContentDto;
 import com.sprint.mission.discodeit.dto.MessageDto;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.exception.ErrorResponse;
@@ -22,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,9 +43,8 @@ public class MessageController {
     @RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MessageDto> createMessage(@RequestPart("messageCreateRequest") MessageDto.MessageCreateRequest messageReq,
                                                     @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments) throws IOException {
-        List<BinaryContentDto.BinaryContentCreateRequest> contentReqs = toServiceDto(attachments);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(messageService.createMessage(messageReq, contentReqs));
+                .body(messageService.createMessage(messageReq, attachments));
     }
 
     // 메시지 채널 조회(UUID)
@@ -86,17 +83,5 @@ public class MessageController {
     public ResponseEntity<Void> deleteMessage(@PathVariable("message-id") UUID messageId) throws IOException {
         messageService.deleteMessage(messageId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
-    }
-
-    private List<BinaryContentDto.BinaryContentCreateRequest> toServiceDto(List<MultipartFile> attachments) throws IOException {
-        if (attachments == null) return null;
-
-        List<BinaryContentDto.BinaryContentCreateRequest> results = new ArrayList<>();
-        for (MultipartFile attachment : attachments) {
-            results.add(new BinaryContentDto.BinaryContentCreateRequest(attachment.getContentType(),
-                    attachment.getOriginalFilename(), attachment.getBytes()));
-        }
-
-        return results;
     }
 }

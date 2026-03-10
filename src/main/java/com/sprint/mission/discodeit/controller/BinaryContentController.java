@@ -34,10 +34,8 @@ public class BinaryContentController {
     @ApiResponse(responseCode = "201", description = "첨부 파일이 성공적으로 생성됨")
     @RequestMapping(method = RequestMethod.POST, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BinaryContentDto> createBinaryContent(@RequestPart("file") MultipartFile attachment) throws IOException {
-
-        BinaryContentDto.BinaryContentCreateRequest createReq = toServiceDto(attachment);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(binaryContentService.create(createReq));
+                .body(binaryContentService.create(attachment));
     }
 
     // BinaryContent 조회
@@ -83,12 +81,5 @@ public class BinaryContentController {
     @RequestMapping(value = "/{binary-content-id}/download", method = RequestMethod.GET)
     public ResponseEntity<?> download(@PathVariable("binary-content-id") UUID binaryContentId) throws IOException {
         return binaryContentStorage.download(binaryContentService.findById(binaryContentId));
-    }
-
-    private BinaryContentDto.BinaryContentCreateRequest toServiceDto(MultipartFile attachment) throws IOException {
-        if (attachment == null) return null;
-
-        return new BinaryContentDto.BinaryContentCreateRequest(attachment.getContentType(),
-                attachment.getOriginalFilename(), attachment.getBytes());
     }
 }
