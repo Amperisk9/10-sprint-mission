@@ -9,22 +9,23 @@ import java.util.*;
 
 @Entity
 @NoArgsConstructor
+@Table(name = "users")
 @Getter
 public class User extends BaseUpdatableEntity {
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private String username;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 60)
     private String password;
 
     @OneToOne(cascade = { CascadeType.PERSIST, CascadeType.REMOVE }, orphanRemoval = true)
     @JoinColumn(name = "profile_id")
     private BinaryContent profile;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.PERSIST, orphanRemoval = true)
+    @OneToOne(mappedBy = "user", cascade = { CascadeType.PERSIST, CascadeType.REMOVE }, orphanRemoval = true)
     private UserStatus status;
 
     public User(String username, String password, String email) {
@@ -55,11 +56,5 @@ public class User extends BaseUpdatableEntity {
             this.status = status;
             status.updateUser(this);
         }
-    }
-
-    @Override
-    public String toString() {
-        return String.format("'유저이름: %s / 메일: %s'",
-                getUsername(), getEmail());
     }
 }

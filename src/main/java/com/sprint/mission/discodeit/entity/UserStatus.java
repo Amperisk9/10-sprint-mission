@@ -1,18 +1,14 @@
 package com.sprint.mission.discodeit.entity;
 
 import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.time.Duration;
 import java.time.Instant;
 
 @Entity
-@NoArgsConstructor(access = )
+@Table(name = "user_statuses")
 @Getter
 public class UserStatus extends BaseUpdatableEntity {
     private static final long ONLINE_TIME_OUT_MS = 5 * 60_000;  // 5분
@@ -24,11 +20,8 @@ public class UserStatus extends BaseUpdatableEntity {
     @Column(nullable = false)
     private Instant lastActiveAt;
 
-
-
-    public UserStatus(User user) {
+    public UserStatus() {
         super();
-        this.user = user;
         this.lastActiveAt = Instant.now();
     }
 

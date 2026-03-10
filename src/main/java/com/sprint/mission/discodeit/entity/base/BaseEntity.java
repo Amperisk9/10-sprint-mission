@@ -1,39 +1,24 @@
 package com.sprint.mission.discodeit.entity.base;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.util.Objects;
 import java.util.UUID;
 
 @MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
+@NoArgsConstructor
 @Getter
 public abstract class BaseEntity {
     @Id
     @GeneratedValue
-    private final UUID id;
+    private UUID id;
 
     @CreatedDate
-    private final Instant createdAt;
-
-    protected BaseEntity() {
-        this.id = UUID.randomUUID();
-        this.createdAt = Instant.now();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof BaseEntity other)) return false;
-        return Objects.equals(this.getId(), other.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.getId());
-    }
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt;
 }
