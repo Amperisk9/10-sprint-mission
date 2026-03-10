@@ -4,6 +4,7 @@ import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.ErrorCode;
 import com.sprint.mission.discodeit.exception.BusinessLogicException;
+import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +16,10 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class BasicAuthService implements AuthService {
     private final UserRepository userRepository;
+    private final UserMapper mapper;
 
     @Override
-    public UserDto.userResponse login(UserDto.userLoginRequest loginReq) {
+    public UserDto login(UserDto.UserLoginRequest loginReq) {
         User user = userRepository.findAll().stream()
                 .filter(u -> Objects.equals(u.getUsername(), loginReq.username()))
                 .findFirst()
@@ -27,8 +29,6 @@ public class BasicAuthService implements AuthService {
             throw new BusinessLogicException(ErrorCode.USER_NOT_FOUND);
         }
 
-        return new UserDto.userResponse(user.getId(), user.getCreatedAt(), user.getUpdatedAt(),
-                user.getUsername(), user.getEmail(),
-                user.getProfileId(), true);
+        return mapper.toDto(user);
     }
 }
