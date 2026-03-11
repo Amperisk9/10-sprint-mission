@@ -13,7 +13,7 @@ import java.time.Instant;
 public class UserStatus extends BaseUpdatableEntity {
     private static final long ONLINE_TIME_OUT_MS = 5 * 60_000;  // 5분
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 

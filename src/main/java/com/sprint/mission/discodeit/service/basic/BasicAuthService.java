@@ -22,9 +22,7 @@ public class BasicAuthService implements AuthService {
 
     @Override
     public UserDto login(UserDto.UserLoginRequest loginReq) {
-        User user = userRepository.findAll().stream()
-                .filter(u -> Objects.equals(u.getUsername(), loginReq.username()))
-                .findFirst()
+        User user = userRepository.findByUsername(loginReq.username())
                 .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
 
         if (!Objects.equals(user.getPassword(), loginReq.password())) {

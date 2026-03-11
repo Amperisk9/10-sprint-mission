@@ -27,10 +27,8 @@ public class BasicUserService implements UserService {
 
     @Override
     public UserDto createUser(UserDto.UserCreateRequest userReq, MultipartFile profileImage) throws IOException {
-        userRepository.findAll().forEach(u -> {
-            if (Objects.equals(u.getUsername(), userReq.username())) throw new BusinessLogicException(ErrorCode.DUPLICATE_USER);
-            if (Objects.equals(u.getEmail(), userReq.email())) throw new BusinessLogicException(ErrorCode.DUPLICATE_USER);
-        });
+        validateDuplicateUsername(userReq.username());
+        validateDuplicateEmail(userReq.email());
 
         User user = new User(userReq.username(), userReq.password(), userReq.email());
 
@@ -39,7 +37,6 @@ public class BasicUserService implements UserService {
         user.updateStatus(status);
 
         // profile 이미지를 같이 추가하면
-        // TODO: BinaryContentStorage 이후 처리 해야 함
         processUpdateProfile(user, profileImage);
         userRepository.save(user);
 
@@ -84,11 +81,15 @@ public class BasicUserService implements UserService {
     }
 
     private void validateDuplicateUsername(String username) {
-        findUserEntityByUsername(username).ifPresent(u -> { throw new BusinessLogicException(ErrorCode.DUPLICATE_USERNAME); });
+        if (userRepository.existsByUsername(username)) {
+            throw new BusinessLogicException(ErrorCode.DUPLICATE_USERNAME);
+        }
     }
 
     private void validateDuplicateEmail(String email) {
-        findUserEntityByEmail(email).ifPresent(u -> { throw new BusinessLogicException(ErrorCode.DUPLICATE_EMAIL); });
+        if (userRepository.existsByEmail(email)) {
+            throw new BusinessLogicException(ErrorCode.DUPLICATE_EMAIL);
+        }
     }
 
     private UserDto toDto(User user) {
@@ -105,17 +106,5 @@ public class BasicUserService implements UserService {
         binaryContentStorage.put(content.getId(), profileImage.getBytes());
 
         user.updateProfile(content);
-    }
-
-    private Optional<User> findUserEntityByUsername(String username) {
-        return userRepository.findAll().stream()
-                .filter(u -> Objects.equals(u.getUsername(), username))
-                .findFirst();
-    }
-
-    private Optional<User> findUserEntityByEmail(String email) {
-        return userRepository.findAll().stream()
-                .filter(u -> Objects.equals(u.getEmail(), email))
-                .findFirst();
     }
 }

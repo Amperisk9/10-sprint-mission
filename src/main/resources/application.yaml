@@ -10,10 +10,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-    open-in-view: false                   # 웹 요청이 끝날 때까지 JPA Session 열어두는 역할(default: true)
+    open-in-view: true                    # 웹 요청이 끝날 때까지 JPA Session 열어두는 역할(default: true)
     show-sql: true
-#    properties:
-#      hibernate:
+    properties:
+      hibernate:
+        default_batch_fetch_size: 100     # 한 쿼리문 batch size 개수
 #        format_sql: true
 
 discodeit:

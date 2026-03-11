@@ -30,24 +30,25 @@ public class BasicChannelService implements ChannelService {
         List<UUID> participantIds = channelPrivateReq.participantIds();
 
         // 참여자 목록의 유저가 user DB에 있는지 확인
-        participantIds.forEach(userId -> {
-            userRepository.findById(userId)
-                    .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
-        });
+        List<User> users = userRepository.findAllById(participantIds);
+        if (participantIds.size() != users.size()) {
+            throw new BusinessLogicException(ErrorCode.USER_NOT_FOUND);
+        }
+
         Channel privateChannel = Channel.of(participantIds);
         channelRepository.save(privateChannel);
 
         // ReadStatus 생성
-        participantIds.forEach(userId -> {
-            readStatusRepository.save(new ReadStatus(getUserOrThrow(userId), privateChannel));
-        });
+        List<ReadStatus> readStatuses = users.stream()
+                .map(user -> new ReadStatus(user, privateChannel)).toList();
+        readStatusRepository.saveAll(readStatuses);
 
         return toResponse(privateChannel);
     }
 
     @Override
     public ChannelDto createChannel(ChannelDto.PublicChannelCreateRequest channelPublicReq) {
-        validateDuplicateTitle(channelPublicReq.name());
+        validateDuplicateName(channelPublicReq.name());
 
         Channel publicChannel = Channel.of(channelPublicReq.name(), channelPublicReq.description());
         channelRepository.save(publicChannel);
@@ -58,6 +59,11 @@ public class BasicChannelService implements ChannelService {
     @Override
     public List<ChannelDto> findAllByUserId(UUID userId) {
         getUserOrThrow(userId);
+
+        // PUBLIC 채널 전부 + userId가 참여한 PRIVATE 채널(JPQL 처리)
+//        List<ChannelDto.RemoveParticipants> channels = channelRepository.findAllByUserId(userId);
+//        if (channels.isEmpty()) return List.of();
+//        return mapper.toDto(channels);
 
         return channelRepository.findAll().stream()
                 // PUBLIC 채널 전부 + userId가 참여한 PRIVATE 채널
@@ -77,7 +83,7 @@ public class BasicChannelService implements ChannelService {
 
         // name 중복성 검사
         if (channelReq.newName() != null && !Objects.equals(channel.getName(), channelReq.newName()))
-            validateDuplicateTitle(channelReq.newName());
+            validateDuplicateName(channelReq.newName());
 
         Optional.ofNullable(channelReq.newName()).ifPresent(channel::updateName);
         Optional.ofNullable(channelReq.newDescription()).ifPresent(channel::updateDescription);
@@ -92,10 +98,8 @@ public class BasicChannelService implements ChannelService {
         channelRepository.deleteById(uuid);
     }
 
-    private void validateDuplicateTitle(String title) {
-        channelRepository.findAll().stream()
-                .filter(c -> Objects.equals(c.getName(), title))
-                .findFirst()
+    private void validateDuplicateName(String name) {
+        channelRepository.findByName(name)
                 .ifPresent(u -> { throw new BusinessLogicException(ErrorCode.DUPLICATE_TITLE); });
     }
 

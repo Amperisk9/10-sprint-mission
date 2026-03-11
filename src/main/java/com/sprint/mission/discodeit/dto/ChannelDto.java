@@ -17,4 +17,6 @@ public record ChannelDto(
     public record PrivateChannelCreateRequest(List<UUID> participantIds) { }
     public record PublicChannelCreateRequest(String name, String description) { }
     public record PublicChannelUpdateRequest(String newName, String newDescription) { }
+
+    public record RemoveParticipants(UUID id, ChannelType type, String name, String description, Instant lastMessageAt) { }
 }

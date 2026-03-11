@@ -12,11 +12,11 @@ import java.time.Instant;
 @Table(name = "read_statuses")
 @Getter
 public class ReadStatus extends BaseUpdatableEntity {
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "channel_id")
     private Channel channel;
 

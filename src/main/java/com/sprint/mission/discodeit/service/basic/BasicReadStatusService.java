@@ -57,8 +57,9 @@ public class BasicReadStatusService implements ReadStatusService {
     @Transactional(readOnly = true)
     @Override
     public List<ReadStatusDto> findAllByUserId(UUID userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
+        if (!userRepository.existsById(userId)) {
+            throw new BusinessLogicException(ErrorCode.USER_NOT_FOUND);
+        }
 
         return readStatusRepository.findAllByUserId(userId).stream()
                 .map(this::toResponse)
