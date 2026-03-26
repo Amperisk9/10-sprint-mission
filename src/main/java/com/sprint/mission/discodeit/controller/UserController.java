@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "User")
 @RequestMapping("/api/users")
 public class UserController {
@@ -53,8 +55,19 @@ public class UserController {
       @RequestPart("userCreateRequest") @Valid UserDto.UserCreateRequest userReq,
       @RequestPart(value = "profile", required = false) MultipartFile profileImage)
       throws IOException {
+    log.info("[Controller] POST /api/users - START: username={}", userReq.username());
+    log.debug("[Controller] POST /api/users - PAYLOAD: username={}, email={}, profileImage={}",
+        userReq.username(), userReq.email(), profileImage);
+    long startTime = System.currentTimeMillis();
+    var dto = userService.createUser(userReq, profileImage);
+    long endTime = System.currentTimeMillis();
+    log.debug(
+        "[Controller] POST /api/users - RESPONSE: userId={}, username={}, email={}, online={}, profileId={}",
+        dto.id(), dto.username(), dto.email(), dto.online(),
+        dto.profile() == null ? null : dto.profile().id());
+    log.info("[Controller] POST /api/users - END: Elapsed={}ms", (endTime - startTime));
     return ResponseEntity.status(HttpStatus.CREATED)
-        .body(userService.createUser(userReq, profileImage));
+        .body(dto);
   }
 
   // 사용자 다중 조회
