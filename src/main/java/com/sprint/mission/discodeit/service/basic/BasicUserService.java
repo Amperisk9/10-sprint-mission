@@ -37,7 +37,7 @@ public class BasicUserService implements UserService {
   @Override
   public UserDto createUser(UserDto.UserCreateRequest userReq, MultipartFile profileImage)
       throws IOException {
-    log.debug("[Service] 유저 생성 시작: name={}, email={}", userReq.username(), userReq.email());
+    log.debug("[Service] 유저 생성 시작:");
     validateDuplicateUsername(userReq.username());
     validateDuplicateEmail(userReq.email());
 
@@ -67,8 +67,7 @@ public class BasicUserService implements UserService {
   @Override
   public UserDto updateUser(UUID uuid, UserDto.UserUpdateRequest userReq,
       MultipartFile profileImage) throws IOException {
-    log.debug("[Service] 유저 수정 시작: id={}, newUsername={}, newEmail={}",
-        uuid, userReq.newUsername(), userReq.newEmail());
+    log.debug("[Service] 유저 수정 시작: id={}", uuid);
     User user = userRepository.findById(uuid)
         .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
 

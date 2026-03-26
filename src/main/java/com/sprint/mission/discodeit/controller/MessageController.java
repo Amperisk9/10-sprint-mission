@@ -58,8 +58,8 @@ public class MessageController {
       throws IOException {
     boolean hasAttachment = attachments != null && !attachments.isEmpty();
 
-    log.info("[Controller] 메세지 생성 요청: authorId={}, channelId={}, content={}, hasAttachment={}",
-        messageReq.authorId(), messageReq.channelId(), messageReq.content(), hasAttachment);
+    log.info("[Controller] 메세지 생성 요청: authorId={}, channelId={}, hasAttachment={}",
+        messageReq.authorId(), messageReq.channelId(), hasAttachment);
 
     MessageDto dto = messageService.createMessage(messageReq, attachments);
     log.debug("[Controller] 메세지 생성 응답 준비: id={}", dto.id());
@@ -88,7 +88,7 @@ public class MessageController {
   @PatchMapping("/{message-id}")
   public ResponseEntity<MessageDto> updateMessage(@PathVariable("message-id") UUID messageId,
       @RequestBody MessageDto.MessageUpdateRequest messageReq) {
-    log.info("[Controller] 메세지 수정 요청: id={} newContent={}", messageId, messageReq.newContent());
+    log.info("[Controller] 메세지 수정 요청: id={}", messageId);
 
     MessageDto dto = messageService.updateMessage(messageId, messageReq);
     log.debug("[Controller] 메세지 수정 응답 준비: id={}", dto.id());

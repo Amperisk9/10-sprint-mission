@@ -56,8 +56,7 @@ public class UserController {
       @RequestPart(value = "profile", required = false) MultipartFile profileImage)
       throws IOException {
     boolean hasProfile = profileImage != null && !profileImage.isEmpty();
-    log.info("[Controller] 유저 생성 요청: username={}, email={}, hasProfile={}",
-        userReq.username(), userReq.email(), hasProfile);
+    log.info("[Controller] 유저 생성 요청: username={}, hasProfile={}", userReq.username(), hasProfile);
 
     UserDto dto = userService.createUser(userReq, profileImage);
     log.debug("[Controller] 유저 생성 응답 준비: id={}", dto.id());
@@ -88,8 +87,8 @@ public class UserController {
       @RequestPart(value = "profile", required = false) MultipartFile profileImage)
       throws IOException {
     boolean hasProfile = profileImage != null && !profileImage.isEmpty();
-    log.info("[Controller] 유저 수정 요청: id={}, newUsername={}, newEmail={}, hasProfile={}",
-        userId, userReq.newUsername(), userReq.newEmail(), hasProfile);
+    log.info("[Controller] 유저 수정 요청: id={}, newUsername={}, hasProfile={}",
+        userId, userReq.newUsername(), hasProfile);
 
     UserDto dto = userService.updateUser(userId, userReq, profileImage);
     log.debug("[Controller] 유저 수정 응답 준비: id={}", dto.id());

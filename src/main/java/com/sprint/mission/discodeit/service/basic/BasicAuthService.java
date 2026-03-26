@@ -33,8 +33,7 @@ public class BasicAuthService implements AuthService {
       throw new BusinessLogicException(ErrorCode.USER_NOT_FOUND);
     }
 
-    log.info("[Service] 로그인 요청 성공: username={} email={}",
-        user.getUsername(), user.getEmail());
+    log.info("[Service] 로그인 요청 성공: id={}", user.getId());
 
     return mapper.toDto(user);
   }

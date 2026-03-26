@@ -47,7 +47,7 @@ public class BasicMessageService implements MessageService {
   @Override
   public MessageDto createMessage(MessageDto.MessageCreateRequest messageReq,
       List<MultipartFile> attachments) throws IOException {
-    log.debug("[Service] 메세지 생성 시작: content={}", messageReq.content());
+    log.debug("[Service] 메세지 생성 시작:");
     Channel channel = getChannelOrThrow(messageReq.channelId());
     User author = getUserOrThrow(messageReq.authorId());
     Message msg = new Message(channel, author, messageReq.content());
@@ -95,15 +95,14 @@ public class BasicMessageService implements MessageService {
   @Transactional
   @Override
   public MessageDto updateMessage(UUID uuid, MessageDto.MessageUpdateRequest messageReq) {
-    log.debug("[Service] 메세지 수정 시작: id={}, newContent={}", uuid, messageReq.newContent());
+    log.debug("[Service] 메세지 수정 시작: id={}", uuid);
     Message msg = getMessageOrThrow(uuid);
 
     Optional.ofNullable(messageReq.newContent()).ifPresent(msg::updateMessage);
     messageRepository.save(msg);
     log.debug("[Service] 수정된 메세지 저장 완료: id={}", msg.getId());
 
-    log.info("[Service] 메시지 수정 성공: id={}, content={}",
-        msg.getId(), msg.getContent());
+    log.info("[Service] 메시지 수정 성공: id={}", msg.getId());
     return toResponse(msg);
   }
 
