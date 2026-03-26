@@ -39,38 +39,42 @@ public class BasicChannelService implements ChannelService {
   @Transactional
   @Override
   public ChannelDto createChannel(ChannelDto.PrivateChannelCreateRequest channelPrivateReq) {
-    // title과 newDescription 불필요에 따른 name 미검증
+    log.debug("[Service] 비공개채널 생성 시작: participants={}", channelPrivateReq.participantIds());
     List<UUID> participantIds = channelPrivateReq.participantIds();
 
     // 참여자 목록의 유저가 user DB에 있는지 확인
     List<User> users = userRepository.findAllById(participantIds);
     if (participantIds.size() != users.size()) {
-      log.warn("[Service] createChannel: 참여자 목록의 유저 일부가 존재하지 않습니다");
       throw new BusinessLogicException(ErrorCode.USER_NOT_FOUND);
     }
 
     Channel privateChannel = Channel.of(participantIds);
     channelRepository.save(privateChannel);
-    log.info("[Service] createChannel: 비공개채널 저장 성공");
+    log.debug("[Service] 비공개채널 저장 완료: id={}", privateChannel.getId());
 
     // ReadStatus 생성
     List<ReadStatus> readStatuses = users.stream()
         .map(user -> new ReadStatus(user, privateChannel)).toList();
     readStatusRepository.saveAll(readStatuses);
-    log.info("[Service] createChannel: readStatus 저장 성공");
+    log.debug("[Service] ReadStatuses 저장 완료: channelId={}", privateChannel.getId());
 
+    log.info("[Service] 비공개채널 생성 성공: id={}", privateChannel.getId());
     return toResponse(privateChannel);
   }
 
   @Transactional
   @Override
   public ChannelDto createChannel(ChannelDto.PublicChannelCreateRequest channelPublicReq) {
+    log.debug("[Service] 공개채널 생성 시작: name={}, description={}",
+        channelPublicReq.name(), channelPublicReq.description());
     validateDuplicateName(channelPublicReq.name());
 
     Channel publicChannel = Channel.of(channelPublicReq.name(), channelPublicReq.description());
     channelRepository.save(publicChannel);
-    log.info("[Service] createChannel: 공개채널 저장 성공");
+    log.debug("[Service] 공개채널 저장 완료: id={}", publicChannel.getId());
 
+    log.info("[Service] 공개채널 생성 성공: id={}, name={}",
+        publicChannel.getId(), publicChannel.getName());
     return toResponse(publicChannel);
   }
 
@@ -94,10 +98,11 @@ public class BasicChannelService implements ChannelService {
   @Transactional
   @Override
   public ChannelDto updateChannel(UUID uuid, ChannelDto.PublicChannelUpdateRequest channelReq) {
+    log.debug("[Service] 채널 수정 시작: id={}, newName={}, newDescription={}",
+        uuid, channelReq.newName(), channelReq.newDescription());
     Channel channel = getChannelOrThrow(uuid);
 
     if (channel.getType() == ChannelType.PRIVATE) {
-      log.warn("[Service] updateChannel: 비공개채널은 수정할 수 없습니다");
       throw new BusinessLogicException(ErrorCode.PRIVATE_CHANNEL_NOT_EDITABLE);
     }
 
@@ -109,41 +114,36 @@ public class BasicChannelService implements ChannelService {
     Optional.ofNullable(channelReq.newName()).ifPresent(channel::updateName);
     Optional.ofNullable(channelReq.newDescription()).ifPresent(channel::updateDescription);
     channelRepository.save(channel);
-    log.info("[Service] updateChannel: 채널 수정 성공");
+    log.debug("[Service] 수정된 채널 저장 완료: id={}", channel.getId());
 
+    log.info("[Service] 채널 수정 성공: id={}, name={}, description={}",
+        channel.getId(), channel.getName(), channel.getDescription());
     return toResponse(channel);
   }
 
   @Transactional
   @Override
   public void deleteChannel(UUID uuid) {
+    log.debug("[Service] 채널 삭제 시작: id={}", uuid);
     getChannelOrThrow(uuid);
+
     channelRepository.deleteById(uuid);
-    log.info("[Service] deleteChannel: 채널 삭제 성공");
+    log.info("[Service] 채널 삭제 성공: id={}", uuid);
   }
 
   private void validateDuplicateName(String name) {
     channelRepository.findByName(name)
-        .ifPresent(u -> {
-          log.warn("[Service] validate: Duplicate name={}", name);
-          throw new BusinessLogicException(ErrorCode.DUPLICATE_TITLE);
-        });
+        .orElseThrow(() -> new BusinessLogicException(ErrorCode.DUPLICATE_TITLE));
   }
 
   private Channel getChannelOrThrow(UUID channelId) {
     return channelRepository.findById(channelId)
-        .orElseThrow(() -> {
-          log.warn("[Service] Channel not found: id={}", channelId);
-          return new BusinessLogicException(ErrorCode.CHANNEL_NOT_FOUND);
-        });
+        .orElseThrow(() -> new BusinessLogicException(ErrorCode.CHANNEL_NOT_FOUND));
   }
 
   private User getUserOrThrow(UUID userId) {
     return userRepository.findById(userId)
-        .orElseThrow(() -> {
-          log.warn("[Service] User not found: id={}", userId);
-          return new BusinessLogicException(ErrorCode.USER_NOT_FOUND);
-        });
+        .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
   }
 
   private ChannelDto toResponse(Channel channel) {

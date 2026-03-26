@@ -33,29 +33,25 @@ public class BasicReadStatusService implements ReadStatusService {
   @Transactional
   @Override
   public ReadStatusDto createReadStatus(ReadStatusDto.ReadStatusCreateRequest createReq) {
+    log.debug("[Service] ReadStatus 생성 시작: userId={}, channelId={}, lastReadAt={}",
+        createReq.userId(), createReq.channelId(), createReq.lastReadAt());
     User user = userRepository.findById(createReq.userId())
-        .orElseThrow(() -> {
-          log.warn("[Service] User not found: id={}", createReq.userId());
-          return new BusinessLogicException(ErrorCode.USER_NOT_FOUND);
-        });
+        .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
     Channel channel = channelRepository.findById(createReq.channelId())
-        .orElseThrow(() -> {
-          log.warn("[Service] Channel not found: id={}", createReq.channelId());
-          return new BusinessLogicException(ErrorCode.CHANNEL_NOT_FOUND);
-        });
+        .orElseThrow(() -> new BusinessLogicException(ErrorCode.CHANNEL_NOT_FOUND));
 
     readStatusRepository.findAllByUserId(user.getId()).stream()
         .filter(r -> Objects.equals(r.getChannel().getId(), channel.getId()))
         .findFirst()
         .ifPresent(r -> {
-          log.warn("[Service] ReadStatus is already: id={}", r.getId());
           throw new BusinessLogicException(ErrorCode.READSTATUS_ALREADY_EXISTS);
         });
 
     ReadStatus readStatus = new ReadStatus(user, channel);
     readStatusRepository.save(readStatus);
-    log.info("[Service] createReadStatus: ReadStatus 저장 성공");
+    log.debug("[Service] ReadStatus 저장 완료: id={}", readStatus.getId());
 
+    log.info("[Service] ReadStatus 생성 성공: id={}", readStatus.getId());
     return toResponse(readStatus);
   }
 
@@ -82,24 +78,26 @@ public class BasicReadStatusService implements ReadStatusService {
   @Override
   public ReadStatusDto updateReadStatus(UUID uuid,
       ReadStatusDto.ReadStatusUpdateRequest updateReq) {
+    log.debug("[Service] ReadStatus 수정 시작: id={}, newLastReadAt={}",
+        uuid, updateReq.newLastReadAt());
     ReadStatus readStatus = readStatusRepository.findById(uuid)
-        .orElseThrow(() -> {
-          log.warn("[Service] ReadStatus not found: id={}", uuid);
-          return new BusinessLogicException(ErrorCode.READSTATUS_NOT_FOUND);
-        });
+        .orElseThrow(() -> new BusinessLogicException(ErrorCode.READSTATUS_NOT_FOUND));
 
     readStatus.updateLastReadAt(updateReq.newLastReadAt());
     readStatusRepository.save(readStatus);
-    log.info("[Service] updateReadStatus: ReadStatus 수정 성공");
+    log.debug("[Service] 수정된 ReadStatus 저장 완료: id={}", readStatus.getId());
 
+    log.info("[Service] ReadStatus 수정 성공: id={}", readStatus.getId());
     return toResponse(readStatus);
   }
 
   @Transactional
   @Override
   public void deleteReadStatusById(UUID uuid) {
+    log.debug("[Service] ReadStatus 삭제 시작: id={}", uuid);
+
     readStatusRepository.deleteById(uuid);
-    log.info("[Service] deleteReadStatus: ReadStatus 삭제 성공");
+    log.info("[Service] ReadStatus 삭제 성공: id={}", uuid);
   }
 
   private ReadStatusDto toResponse(ReadStatus readStatus) {

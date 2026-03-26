@@ -30,17 +30,19 @@ public class BasicBinaryContentService implements BinaryContentService {
   @Transactional
   @Override
   public BinaryContentDto create(MultipartFile attachment) throws IOException {
+    log.debug("[Service] 첨부파일 생성 시작: attachment={}", attachment);
     if (attachment == null) {
-      log.warn("[Service] attachment is null");
-      return null;  // TODO exception으로 교체 필요
+      return null;  // TODO Custom exception으로 교체 필요
     }
 
     BinaryContent content = new BinaryContent(attachment.getOriginalFilename(),
         attachment.getSize(), attachment.getContentType());
     binaryContentRepository.save(content);
-    binaryContentStorage.put(content.getId(), attachment.getBytes());
-    log.info("[Service] create: 첨부파일 저장 성공");
+    log.debug("[Service] 첨부파일 저장 완료: contentId={}", content.getId());
 
+    binaryContentStorage.put(content.getId(), attachment.getBytes());
+    log.info("[Service] 첨부파일 물리적 생성 성공: contentId={}, contentType={}",
+        content.getId(), content.getContentType());
     return toResponse(content);
   }
 
@@ -61,14 +63,15 @@ public class BasicBinaryContentService implements BinaryContentService {
   @Transactional
   @Override
   public void deleteById(UUID uuid) throws IOException {
+    log.debug("[Service] 첨부파일 삭제 시작: id={}", uuid);
+
     binaryContentRepository.findById(uuid)
-        .orElseThrow(() -> {
-          log.warn("[Service] BinaryContent not found: id={}", uuid);
-          return new BusinessLogicException(ErrorCode.BINARYCONTENT_NOT_FOUND);
-        });
+        .orElseThrow(() -> new BusinessLogicException(ErrorCode.BINARYCONTENT_NOT_FOUND));
     binaryContentStorage.delete(uuid);
+    log.debug("[Service] 첨부파일 물리적 삭제 완료: id={}", uuid);
+
     binaryContentRepository.deleteById(uuid);
-    log.info("[Service] delete: 첨부파일 삭제 성공");
+    log.info("[Service] 첨부파일 삭제 성공: id={}", uuid);
   }
 
   private BinaryContentDto toResponse(BinaryContent binaryContent) {

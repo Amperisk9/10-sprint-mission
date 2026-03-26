@@ -63,14 +63,10 @@ public class BasicUserStatusService implements UserStatusService {
   public UserStatusDto updateUserStatus(UUID uuid,
       UserStatusDto.UserStatusUpdateRequest updateReq) {
     UserStatus userStatus = userStatusRepository.findById(uuid)
-        .orElseThrow(() -> {
-          log.warn("[Service] UserStatus not found: id={}", uuid);
-          return new BusinessLogicException(ErrorCode.USERSTATUS_NOT_FOUND);
-        });
+        .orElseThrow(() -> new BusinessLogicException(ErrorCode.USERSTATUS_NOT_FOUND));
 
     userStatus.updateLastActiveAt(updateReq.newLastActiveAt());
     userStatusRepository.save(userStatus);
-    log.info("[Service] updateUserStatus: 유저 상태 수정 성공");
 
     return toResponse(userStatus);
   }
@@ -79,16 +75,15 @@ public class BasicUserStatusService implements UserStatusService {
   @Override
   public UserStatusDto updateUserStatusByUserId(UUID userId,
       UserStatusDto.UserStatusUpdateRequest updateReq) {
+    log.debug("[Service] UserStatus 수정 시작: userId={}", userId);
     UserStatus userStatus = userStatusRepository.findByUserId(userId)
-        .orElseThrow(() -> {
-          log.warn("[Service] UserStatus not found: userId={}", userId);
-          return new BusinessLogicException(ErrorCode.USERSTATUS_NOT_FOUND);
-        });
+        .orElseThrow(() -> new BusinessLogicException(ErrorCode.USERSTATUS_NOT_FOUND));
 
     userStatus.updateLastActiveAt(updateReq.newLastActiveAt());
     userStatusRepository.save(userStatus);
-    log.info("[Service] updateUserStatus: 유저 상태 수정 성공");
+    log.debug("[Service] 수정된 UserStatus 저장 완료: id={}, userId={}", userStatus.getId(), userId);
 
+    log.info("[Service] UserStatus 수정 성공: id={}", userStatus.getId());
     return toResponse(userStatus);
   }
 

@@ -36,8 +36,11 @@ public class AuthController {
   })
   @PostMapping(value = "/login")
   public ResponseEntity<UserDto> login(@RequestBody UserDto.UserLoginRequest loginReq) {
-    var dto = authService.login(loginReq);
-    log.info("[Controller] POST /api/auth/login: 로그인 요청 성공");
+    log.info("[Controller] 로그인 요청: username={}", loginReq.username());
+
+    UserDto dto = authService.login(loginReq);
+    log.debug("[Controller] 로그인 응답 준비: id={}, username={}", dto.id(), dto.username());
+
     return ResponseEntity.status(HttpStatus.OK).body(dto);
   }
 }

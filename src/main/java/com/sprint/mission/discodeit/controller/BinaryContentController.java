@@ -44,8 +44,12 @@ public class BinaryContentController {
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<BinaryContentDto> createBinaryContent(
       @RequestPart("file") MultipartFile attachment) throws IOException {
-    var dto = binaryContentService.create(attachment);
-    log.info("[Controller] POST /api/binaryContents: 첨부 파일 생성요청 성공");
+    boolean hasAttachment = attachment != null && !attachment.isEmpty();
+    log.info("[Controller] 첨부파일 생성 요청: hasAttachment={}", hasAttachment);
+
+    BinaryContentDto dto = binaryContentService.create(attachment);
+    log.debug("[Controller] 첨부파일 생성 응답 준비: id={}", dto.id());
+
     return ResponseEntity.status(HttpStatus.CREATED).body(dto);
   }
 
@@ -59,7 +63,7 @@ public class BinaryContentController {
   @GetMapping("/{binary-content-id}")
   public ResponseEntity<BinaryContentDto> findById(
       @PathVariable("binary-content-id") UUID binaryContentId) {
-    var dto = binaryContentService.findById(binaryContentId);
+    BinaryContentDto dto = binaryContentService.findById(binaryContentId);
     return ResponseEntity.status(HttpStatus.OK).body(dto);
   }
 
@@ -69,7 +73,7 @@ public class BinaryContentController {
   @GetMapping(params = "binaryContentIds")
   public ResponseEntity<List<BinaryContentDto>> findAllByIdIn(
       @RequestParam List<UUID> binaryContentIds) {
-    var dto = binaryContentService.findAllByIdIn(binaryContentIds);
+    List<BinaryContentDto> dto = binaryContentService.findAllByIdIn(binaryContentIds);
     return ResponseEntity.status(HttpStatus.OK).body(dto);
   }
 
@@ -83,8 +87,11 @@ public class BinaryContentController {
   @DeleteMapping("/{binary-content-id}")
   public ResponseEntity<Void> deleteById(@PathVariable("binary-content-id") UUID binaryContentId)
       throws IOException {
+    log.info("[Controller] 첨부파일 삭제 요청: id={}", binaryContentId);
+
     binaryContentService.deleteById(binaryContentId);
-    log.info("[Controller] DELETE /api/binaryContents/{}: 첨부 파일 삭제요청 성공", binaryContentId);
+    log.debug("[Controller] 첨부파일 삭제 응답 준비: id={}", binaryContentId);
+
     return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
   }
 
@@ -96,8 +103,10 @@ public class BinaryContentController {
   @GetMapping("/{binary-content-id}/download")
   public ResponseEntity<?> download(@PathVariable("binary-content-id") UUID binaryContentId)
       throws IOException {
-    var dto = binaryContentService.findById(binaryContentId);
-    log.info("[Controller] GET /api/binaryContents/{}/download: 첨부 파일 다운로드요청 성공", binaryContentId);
+    log.info("[Controller] 첨부파일 다운로드 요청: id={}", binaryContentId);
+
+    BinaryContentDto dto = binaryContentService.findById(binaryContentId);
+    log.debug("[Controller] 첨부파일 다운로드 응답 준비: id={}", binaryContentId);
 
     return binaryContentStorage.download(dto);
   }

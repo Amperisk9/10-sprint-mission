@@ -46,8 +46,12 @@ public class ReadStatusController {
   @PostMapping
   public ResponseEntity<ReadStatusDto> createReadStatus(
       @RequestBody ReadStatusDto.ReadStatusCreateRequest createReq) {
-    var dto = readStatusService.createReadStatus(createReq);
-    log.info("[Controller] POST /api/readStatuses: 읽은 상태 생성요청 성공");
+    log.info("[Controller] ReadStatus 생성 요청: userId={}, channelId={}, lastReadAt={}",
+        createReq.userId(), createReq.channelId(), createReq.lastReadAt());
+
+    ReadStatusDto dto = readStatusService.createReadStatus(createReq);
+    log.debug("[Controller] ReadStatus 생성 응답 준비: id={}", dto.id());
+
     return ResponseEntity.status(HttpStatus.CREATED).body(dto);
   }
 
@@ -57,7 +61,7 @@ public class ReadStatusController {
   @GetMapping("/{read-status-id}")
   public ResponseEntity<ReadStatusDto> findReadStatus(
       @PathVariable("read-status-id") UUID readStatusId) {
-    var dto = readStatusService.findById(readStatusId);
+    ReadStatusDto dto = readStatusService.findById(readStatusId);
     return ResponseEntity.status(HttpStatus.OK).body(dto);
   }
 
@@ -66,7 +70,7 @@ public class ReadStatusController {
   @ApiResponse(responseCode = "200", description = "Message 읽음 상태 목록 조회 성공")
   @GetMapping(params = "userId")
   public ResponseEntity<List<ReadStatusDto>> findAllByUserId(@RequestParam UUID userId) {
-    var dto = readStatusService.findAllByUserId(userId);
+    List<ReadStatusDto> dto = readStatusService.findAllByUserId(userId);
     return ResponseEntity.status(HttpStatus.OK).body(dto);
   }
 
@@ -81,8 +85,12 @@ public class ReadStatusController {
   public ResponseEntity<ReadStatusDto> updateReadStatus(
       @PathVariable("read-status-id") UUID readStatusId,
       @RequestBody ReadStatusDto.ReadStatusUpdateRequest updateReq) {
-    var dto = readStatusService.updateReadStatus(readStatusId, updateReq);
-    log.info("[Controller] PATCH /api/readStatuses/{}: 읽은 상태 수정요청 성공", readStatusId);
+    log.info("[Controller] ReadStatus 수정 요청: id={}, newLastReadAt={}",
+        readStatusId, updateReq.newLastReadAt());
+
+    ReadStatusDto dto = readStatusService.updateReadStatus(readStatusId, updateReq);
+    log.debug("[Controller] ReadStatus 수정 응답 준비: id={}", dto.id());
+
     return ResponseEntity.status(HttpStatus.OK).body(dto);
   }
 
@@ -91,8 +99,11 @@ public class ReadStatusController {
   @ApiResponse(responseCode = "204", description = "Message 읽음 상태가 성공적으로 삭제됨")
   @DeleteMapping("/{read-status-id}")
   public ResponseEntity<Void> deleteReadStatus(@PathVariable("read-status-id") UUID readStatusId) {
+    log.info("[Controller] ReadStatus 삭제 요청: id={}", readStatusId);
+
     readStatusService.deleteReadStatusById(readStatusId);
-    log.info("[Controller] DELETE /api/readStatuses/{}: 읽은 상태 삭제요청 성공", readStatusId);
+    log.debug("[Controller] ReadStatus 삭제 응답 준비: id={}", readStatusId);
+
     return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
   }
 }
