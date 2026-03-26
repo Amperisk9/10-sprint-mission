@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "ReadStatus")
 @RequestMapping("/api/readStatuses")
 public class ReadStatusController {
@@ -44,8 +46,9 @@ public class ReadStatusController {
   @PostMapping
   public ResponseEntity<ReadStatusDto> createReadStatus(
       @RequestBody ReadStatusDto.ReadStatusCreateRequest createReq) {
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(readStatusService.createReadStatus(createReq));
+    var dto = readStatusService.createReadStatus(createReq);
+    log.info("[Controller] POST /api/readStatuses: 읽은 상태 생성요청 성공");
+    return ResponseEntity.status(HttpStatus.CREATED).body(dto);
   }
 
   // ReadStatus 조회
@@ -54,8 +57,8 @@ public class ReadStatusController {
   @GetMapping("/{read-status-id}")
   public ResponseEntity<ReadStatusDto> findReadStatus(
       @PathVariable("read-status-id") UUID readStatusId) {
-    return ResponseEntity.status(HttpStatus.OK)
-        .body(readStatusService.findById(readStatusId));
+    var dto = readStatusService.findById(readStatusId);
+    return ResponseEntity.status(HttpStatus.OK).body(dto);
   }
 
   // 특정 사용자별 ReadStatus 조회
@@ -63,8 +66,8 @@ public class ReadStatusController {
   @ApiResponse(responseCode = "200", description = "Message 읽음 상태 목록 조회 성공")
   @GetMapping(params = "userId")
   public ResponseEntity<List<ReadStatusDto>> findAllByUserId(@RequestParam UUID userId) {
-    return ResponseEntity.status(HttpStatus.OK)
-        .body(readStatusService.findAllByUserId(userId));
+    var dto = readStatusService.findAllByUserId(userId);
+    return ResponseEntity.status(HttpStatus.OK).body(dto);
   }
 
   // ReadStatus 수정
@@ -78,8 +81,9 @@ public class ReadStatusController {
   public ResponseEntity<ReadStatusDto> updateReadStatus(
       @PathVariable("read-status-id") UUID readStatusId,
       @RequestBody ReadStatusDto.ReadStatusUpdateRequest updateReq) {
-    return ResponseEntity.status(HttpStatus.OK)
-        .body(readStatusService.updateReadStatus(readStatusId, updateReq));
+    var dto = readStatusService.updateReadStatus(readStatusId, updateReq);
+    log.info("[Controller] PATCH /api/readStatuses/{}: 읽은 상태 수정요청 성공", readStatusId);
+    return ResponseEntity.status(HttpStatus.OK).body(dto);
   }
 
   // ReadStatus 삭제
@@ -88,6 +92,7 @@ public class ReadStatusController {
   @DeleteMapping("/{read-status-id}")
   public ResponseEntity<Void> deleteReadStatus(@PathVariable("read-status-id") UUID readStatusId) {
     readStatusService.deleteReadStatusById(readStatusId);
+    log.info("[Controller] DELETE /api/readStatuses/{}: 읽은 상태 삭제요청 성공", readStatusId);
     return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
   }
 }

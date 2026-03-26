@@ -37,28 +37,20 @@ public class BasicUserService implements UserService {
   @Override
   public UserDto createUser(UserDto.UserCreateRequest userReq, MultipartFile profileImage)
       throws IOException {
-    log.info("[Service] createUser - START");
-    log.debug("[Service] createUser - PARAMETERS: username={}, email={}, profileImage={}",
-        userReq.username(), userReq.email(), profileImage);
-
     validateDuplicateUsername(userReq.username());
     validateDuplicateEmail(userReq.email());
-    log.debug("[Service] createUser - LOGIC: username & email 중복 검증 완료");
 
     User user = new User(userReq.username(), userReq.password(), userReq.email());
-    log.info("[Service] createUser - LOGIC: user 생성");
 
     // userStatus 관련
     UserStatus status = new UserStatus();
     user.updateStatus(status);
-    log.info("[Service] createUser - LOGIC: userStatus 생성");
 
     // profile 이미지를 같이 추가하면
     processUpdateProfile(user, profileImage);
     userRepository.save(user);
-    log.debug("[Service] createUser - LOGIC: user 저장 완료");
+    log.info("[Service] createUser: 유저 저장 성공");
 
-    log.info("[Service] createUser - END");
     return toDto(user);
   }
 
@@ -73,7 +65,10 @@ public class BasicUserService implements UserService {
   public UserDto updateUser(UUID uuid, UserDto.UserUpdateRequest userReq,
       MultipartFile profileImage) throws IOException {
     User user = userRepository.findById(uuid)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
+        .orElseThrow(() -> {
+          log.warn("[Service] User not found: id={}", uuid);
+          return new BusinessLogicException(ErrorCode.USER_NOT_FOUND);
+        });
 
     // username과 mail 중복성 검사
     if (userReq.newUsername() != null && !Objects.equals(user.getUsername(),
@@ -92,6 +87,7 @@ public class BasicUserService implements UserService {
     processUpdateProfile(user, profileImage);
 
     userRepository.save(user);
+    log.info("[Service] updateUser: 유저 수정 성공");
 
     return toDto(user);
   }
@@ -99,9 +95,13 @@ public class BasicUserService implements UserService {
   @Transactional
   @Override
   public void deleteUser(UUID uuid) {
-    userRepository.findById(uuid)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
+    if (!userRepository.existsById(uuid)) {
+      log.warn("[Service] User not found: id={}", uuid);
+      throw new BusinessLogicException(ErrorCode.USER_NOT_FOUND);
+    }
+
     userRepository.deleteById(uuid);
+    log.info("[Service] deleteUser: 유저 삭제 성공");
   }
 
   private void validateDuplicateUsername(String username) {
@@ -124,7 +124,7 @@ public class BasicUserService implements UserService {
 
   private void processUpdateProfile(User user, MultipartFile profileImage) throws IOException {
     if (profileImage == null) {
-      log.debug("[Service] processUpdateProfile - LOGIC: 이미지 없음 확인");
+      log.debug("[Service] processUpdateProfile: 요청된 이미지 없음");
       return;
     }
 
@@ -133,8 +133,8 @@ public class BasicUserService implements UserService {
         profileImage.getOriginalFilename(), profileImage.getSize(), profileImage.getContentType());
     binaryContentRepository.save(content);
     binaryContentStorage.put(content.getId(), profileImage.getBytes());
+    log.info("[Service] processUpdateProfile: 이미지 저장 성공");
 
     user.updateProfile(content);
-    log.info("[Service] processUpdateProfile - LOGIC: binaryContent 생성");
   }
 }

@@ -55,19 +55,9 @@ public class UserController {
       @RequestPart("userCreateRequest") @Valid UserDto.UserCreateRequest userReq,
       @RequestPart(value = "profile", required = false) MultipartFile profileImage)
       throws IOException {
-    log.info("[Controller] POST /api/users - START: username={}", userReq.username());
-    log.debug("[Controller] POST /api/users - PAYLOAD: username={}, email={}, profileImage={}",
-        userReq.username(), userReq.email(), profileImage);
-    long startTime = System.currentTimeMillis();
     var dto = userService.createUser(userReq, profileImage);
-    long endTime = System.currentTimeMillis();
-    log.debug(
-        "[Controller] POST /api/users - RESPONSE: userId={}, username={}, email={}, online={}, profileId={}",
-        dto.id(), dto.username(), dto.email(), dto.online(),
-        dto.profile() == null ? null : dto.profile().id());
-    log.info("[Controller] POST /api/users - END: Elapsed={}ms", (endTime - startTime));
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(dto);
+    log.info("[Controller] POST /api/users: 유저 생성요청 성공");
+    return ResponseEntity.status(HttpStatus.CREATED).body(dto);
   }
 
   // 사용자 다중 조회
@@ -75,8 +65,8 @@ public class UserController {
   @ApiResponse(responseCode = "200", description = "User 목록 조회 성공")
   @GetMapping
   public ResponseEntity<List<UserDto>> findUsers() {
-    return ResponseEntity.status(HttpStatus.OK)
-        .body(userService.findAllUsers());
+    var dto = userService.findAllUsers();
+    return ResponseEntity.status(HttpStatus.OK).body(dto);
   }
 
   // 사용자 수정
@@ -92,8 +82,9 @@ public class UserController {
       @RequestPart("userUpdateRequest") @Valid UserDto.UserUpdateRequest userReq,
       @RequestPart(value = "profile", required = false) MultipartFile profileImage)
       throws IOException {
-    return ResponseEntity.status(HttpStatus.OK)
-        .body(userService.updateUser(userId, userReq, profileImage));
+    var dto = userService.updateUser(userId, userReq, profileImage);
+    log.info("[Controller] PATCH /api/users/{}: 유저 수정요청 성공", userId);
+    return ResponseEntity.status(HttpStatus.OK).body(dto);
   }
 
   // 사용자 온라인 상태 업데이트
@@ -106,8 +97,9 @@ public class UserController {
   @PatchMapping("/{user-id}/userStatus")
   public ResponseEntity<UserStatusDto> updateLastActive(@PathVariable("user-id") UUID userId,
       @RequestBody UserStatusDto.UserStatusUpdateRequest updateReq) {
-    return ResponseEntity.status(HttpStatus.OK)
-        .body(userStatusService.updateUserStatusByUserId(userId, updateReq));
+    var dto = userStatusService.updateUserStatusByUserId(userId, updateReq);
+    log.info("[Controller] PATCH /api/users/{}/userStatus: 유저 온라인상태 수정요청 성공", userId);
+    return ResponseEntity.status(HttpStatus.OK).body(dto);
   }
 
   // 사용자 삭제
@@ -120,6 +112,7 @@ public class UserController {
   @DeleteMapping("/{user-id}")
   public ResponseEntity<Void> deleteUser(@PathVariable("user-id") UUID userId) {
     userService.deleteUser(userId);
+    log.info("[Controller] DELETE /api/users/{}: 유저 삭제요청 성공", userId);
     return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
   }
 }

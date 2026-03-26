@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Auth")
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -34,7 +36,8 @@ public class AuthController {
   })
   @PostMapping(value = "/login")
   public ResponseEntity<UserDto> login(@RequestBody UserDto.UserLoginRequest loginReq) {
-    return ResponseEntity.status(HttpStatus.OK)
-        .body(authService.login(loginReq));
+    var dto = authService.login(loginReq);
+    log.info("[Controller] POST /api/auth/login: 로그인 요청 성공");
+    return ResponseEntity.status(HttpStatus.OK).body(dto);
   }
 }

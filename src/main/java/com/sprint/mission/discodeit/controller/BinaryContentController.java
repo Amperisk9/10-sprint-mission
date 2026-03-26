@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "BinaryContent")
 @RequestMapping("/api/binaryContents")
 public class BinaryContentController {
@@ -42,8 +44,9 @@ public class BinaryContentController {
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<BinaryContentDto> createBinaryContent(
       @RequestPart("file") MultipartFile attachment) throws IOException {
-    return ResponseEntity.status(HttpStatus.CREATED)
-        .body(binaryContentService.create(attachment));
+    var dto = binaryContentService.create(attachment);
+    log.info("[Controller] POST /api/binaryContents: 첨부 파일 생성요청 성공");
+    return ResponseEntity.status(HttpStatus.CREATED).body(dto);
   }
 
   // BinaryContent 조회
@@ -56,8 +59,8 @@ public class BinaryContentController {
   @GetMapping("/{binary-content-id}")
   public ResponseEntity<BinaryContentDto> findById(
       @PathVariable("binary-content-id") UUID binaryContentId) {
-    return ResponseEntity.status(HttpStatus.OK)
-        .body(binaryContentService.findById(binaryContentId));
+    var dto = binaryContentService.findById(binaryContentId);
+    return ResponseEntity.status(HttpStatus.OK).body(dto);
   }
 
   // BinaryContent 다건 조회
@@ -66,8 +69,8 @@ public class BinaryContentController {
   @GetMapping(params = "binaryContentIds")
   public ResponseEntity<List<BinaryContentDto>> findAllByIdIn(
       @RequestParam List<UUID> binaryContentIds) {
-    return ResponseEntity.status(HttpStatus.OK)
-        .body(binaryContentService.findAllByIdIn(binaryContentIds));
+    var dto = binaryContentService.findAllByIdIn(binaryContentIds);
+    return ResponseEntity.status(HttpStatus.OK).body(dto);
   }
 
   // BinaryContent 삭제
@@ -81,6 +84,7 @@ public class BinaryContentController {
   public ResponseEntity<Void> deleteById(@PathVariable("binary-content-id") UUID binaryContentId)
       throws IOException {
     binaryContentService.deleteById(binaryContentId);
+    log.info("[Controller] DELETE /api/binaryContents/{}: 첨부 파일 삭제요청 성공", binaryContentId);
     return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
   }
 
@@ -92,6 +96,9 @@ public class BinaryContentController {
   @GetMapping("/{binary-content-id}/download")
   public ResponseEntity<?> download(@PathVariable("binary-content-id") UUID binaryContentId)
       throws IOException {
-    return binaryContentStorage.download(binaryContentService.findById(binaryContentId));
+    var dto = binaryContentService.findById(binaryContentId);
+    log.info("[Controller] GET /api/binaryContents/{}/download: 첨부 파일 다운로드요청 성공", binaryContentId);
+
+    return binaryContentStorage.download(dto);
   }
 }
