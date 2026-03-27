@@ -51,9 +51,15 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler
   public ResponseEntity<ErrorResponse> handleBusinessLogicException(DiscodeitException e) {
+    int status = switch (e.getClass().getSimpleName()) {
+      case "UserNotFoundException", "UserStatusNotFoundException", "ChannelNotFoundException",
+           "ReadStatusNotFoundException", "MessageNotFoundException",
+           "BinaryContentNotFoundException" -> 404;
+      default -> 400;
+    };
     log.warn("{}", e.getMessage(), e);
 
-    ErrorResponse errorResponse = ErrorResponse.of(400, e);
+    ErrorResponse errorResponse = ErrorResponse.of(status, e);
     return ResponseEntity.status(errorResponse.getStatus()).body(errorResponse);
   }
 }

@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +40,7 @@ public class ChannelController {
   @ApiResponse(responseCode = "201", description = "Public Channel이 성공적으로 생성됨")
   @PostMapping("/public")
   public ResponseEntity<ChannelDto> createPublicChannel(
-      @RequestBody ChannelDto.PublicChannelCreateRequest createReq) {
+      @Valid @RequestBody ChannelDto.PublicChannelCreateRequest createReq) {
     log.info("[Controller] 공개채널 생성 요청: name={}, description={}",
         createReq.name(), createReq.description());
 
@@ -55,7 +56,7 @@ public class ChannelController {
   @ApiResponse(responseCode = "201", description = "Private Channel이 성공적으로 생성됨")
   @PostMapping("/private")
   public ResponseEntity<ChannelDto> createPrivateChannel(
-      @RequestBody ChannelDto.PrivateChannelCreateRequest createReq) {
+      @Valid @RequestBody ChannelDto.PrivateChannelCreateRequest createReq) {
     log.info("[Controller] 비공개채널 생성 요청: participants={}",
         createReq.participantIds());
 

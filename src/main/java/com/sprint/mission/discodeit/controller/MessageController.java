@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
@@ -46,14 +47,12 @@ public class MessageController {
   @Operation(summary = "Message 생성")
   @ApiResponses({
       @ApiResponse(responseCode = "201", description = "Message가 성공적으로 생성됨"),
-      @ApiResponse(responseCode = "403", description = "Message를 생성할 권한이 없음",
-          content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
       @ApiResponse(responseCode = "404", description = "Channel 또는 User를 찾을 수 없음",
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<MessageDto> createMessage(
-      @RequestPart("messageCreateRequest") MessageDto.MessageCreateRequest messageReq,
+      @Valid @RequestPart("messageCreateRequest") MessageDto.MessageCreateRequest messageReq,
       @RequestPart(value = "attachments", required = false) List<MultipartFile> attachments)
       throws IOException {
     boolean hasAttachment = attachments != null && !attachments.isEmpty();

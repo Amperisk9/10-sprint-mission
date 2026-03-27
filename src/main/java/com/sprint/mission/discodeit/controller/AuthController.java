@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -35,7 +36,7 @@ public class AuthController {
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   @PostMapping(value = "/login")
-  public ResponseEntity<UserDto> login(@RequestBody UserDto.UserLoginRequest loginReq) {
+  public ResponseEntity<UserDto> login(@Valid @RequestBody UserDto.UserLoginRequest loginReq) {
     log.info("[Controller] 로그인 요청: username={}", loginReq.username());
 
     UserDto dto = authService.login(loginReq);

@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -10,11 +9,11 @@ public record UserStatusDto(
     Instant lastActiveAt
 ) {
 
-  public record UserStatusCreateRequest(@NotBlank UUID userId) {
+  public record UserStatusCreateRequest(UUID userId) {
 
   }
 
-  public record UserStatusUpdateRequest(@NotBlank Instant newLastActiveAt) {
+  public record UserStatusUpdateRequest(Instant newLastActiveAt) {
 
   }
 }

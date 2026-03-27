@@ -16,6 +16,7 @@ import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -43,7 +44,8 @@ public class BasicChannelService implements ChannelService {
   @Override
   public ChannelDto createChannel(ChannelDto.PrivateChannelCreateRequest channelPrivateReq) {
     log.debug("[Service] 비공개채널 생성 시작: participants={}", channelPrivateReq.participantIds());
-    List<UUID> participantIds = channelPrivateReq.participantIds();
+    List<UUID> participantIds = Optional.ofNullable(channelPrivateReq.participantIds())
+        .orElse(new ArrayList<>());
 
     // 참여자 목록의 유저가 user DB에 있는지 확인
     List<User> users = userRepository.findAllById(participantIds);
@@ -85,6 +87,7 @@ public class BasicChannelService implements ChannelService {
   public List<ChannelDto> findAllByUserId(UUID userId) {
     getUserOrThrow(userId);
 
+    // TODO 이부분 SQL도 수정해야하고 왜 RemoveParticipants로 바뀌었는지도 찾아서 해결해야 함
     // PUBLIC 채널 전부 + userId가 참여한 PRIVATE 채널(JPQL 처리)
 //        List<ChannelDto.RemoveParticipants> channels = channelRepository.findAllByUserId(userId);
 //        if (channels.isEmpty()) return List.of();
