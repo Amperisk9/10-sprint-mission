@@ -2,6 +2,7 @@ package com.sprint.mission.discodeit.exception;
 
 import jakarta.validation.ConstraintViolation;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,10 +35,11 @@ public class ErrorResponse {
       BindingResult bindingResult) {
     List<ErrorDetail> details = ErrorDetail.of(bindingResult);
     String message = details.isEmpty() ? null : details.get(0).getReason();
-    Map<String, Object> mapDetails = details.stream().collect(Collectors.toMap(
-        ErrorDetail::getName,
-        ErrorDetail::getRejectedValue
-    ));
+
+    Map<String, Object> mapDetails = new HashMap<>();
+    for (ErrorDetail d : details) {
+      mapDetails.put(d.getName(), d.getRejectedValue());
+    }
 
     return new ErrorResponse(Instant.now(), "VALIDATION_ERROR", message,
         mapDetails, exceptionType, status);
@@ -47,13 +49,19 @@ public class ErrorResponse {
       Set<ConstraintViolation<?>> constraintViolations) {
     List<ErrorDetail> details = ErrorDetail.of(constraintViolations);
     String message = details.isEmpty() ? null : details.get(0).getReason();
-    Map<String, Object> mapDetails = details.stream().collect(Collectors.toMap(
-        ErrorDetail::getName,
-        ErrorDetail::getRejectedValue
-    ));
+
+    Map<String, Object> mapDetails = new HashMap<>();
+    for (ErrorDetail d : details) {
+      mapDetails.put(d.getName(), d.getRejectedValue());
+    }
 
     return new ErrorResponse(Instant.now(), "VALIDATION_ERROR", message,
         mapDetails, exceptionType, status);
+  }
+
+  public static ErrorResponse of(int status, Exception exception) {
+    return new ErrorResponse(Instant.now(), "INTERNAL_ERROR", "예기치 못한 오류가 발생했습니다",
+        null, "Exception", status);
   }
 
   public static ErrorResponse of(int status, DiscodeitException exception) {
@@ -62,7 +70,7 @@ public class ErrorResponse {
         exception.getErrorCode().getCode(),
         exception.getMessage(),
         exception.getDetails(),
-        exception.getClass().getName(),
+        exception.getClass().getSimpleName(),
         status
     );
   }
@@ -80,14 +88,6 @@ public class ErrorResponse {
       this.reason = reason;
     }
 
-    //    public static Map<String, Object> of(BindingResult bindingResult) {
-//      return bindingResult.getFieldErrors().stream()
-//          .collect(Collectors.toMap(
-//              e -> e.getField(),                  // key
-//              e -> e.getRejectedValue() != null   // value
-//                  ? e.getRejectedValue() : ""
-//          ));
-//    }
     public static List<ErrorDetail> of(BindingResult bindingResult) {
       return bindingResult.getFieldErrors().stream()
           .map(err -> new ErrorDetail(
@@ -97,13 +97,6 @@ public class ErrorResponse {
           )).collect(Collectors.toList());
     }
 
-    //    public static Map<String, Object> of(Set<ConstraintViolation<?>> constraintViolations) {
-//      return constraintViolations.stream()
-//          .collect(Collectors.toMap(
-//              cv -> cv.getPropertyPath().toString(),  // key
-//              cv -> cv.getInvalidValue()              // value
-//          ));
-//    }
     public static List<ErrorDetail> of(Set<ConstraintViolation<?>> constraintViolations) {
       return constraintViolations.stream()
           .map(cv -> new ErrorDetail(

@@ -2,8 +2,7 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.exception.BusinessLogicException;
-import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.AuthService;
@@ -27,10 +26,10 @@ public class BasicAuthService implements AuthService {
     log.debug("[Service] 로그인 요청 시작: username={}", loginReq.username());
 
     User user = userRepository.findByUsername(loginReq.username())
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
+        .orElseThrow(() -> new UserNotFoundException());
 
     if (!Objects.equals(user.getPassword(), loginReq.password())) {
-      throw new BusinessLogicException(ErrorCode.USER_NOT_FOUND);
+      throw new UserNotFoundException();
     }
 
     log.info("[Service] 로그인 요청 성공: id={}", user.getId());

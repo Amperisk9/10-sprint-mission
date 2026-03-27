@@ -4,8 +4,9 @@ import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
-import com.sprint.mission.discodeit.exception.BusinessLogicException;
-import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.exception.user.DuplicateEmailException;
+import com.sprint.mission.discodeit.exception.user.DuplicateUsernameException;
+import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -46,6 +48,7 @@ public class BasicUserService implements UserService {
     // userStatus 관련
     UserStatus status = new UserStatus();
     user.updateStatus(status);
+    userRepository.save(user);
     log.debug("[Service] UserStatus 저장 완료: id={}, userId={}", status.getId(), user.getId());
 
     // profile 이미지를 같이 추가하면
@@ -69,20 +72,27 @@ public class BasicUserService implements UserService {
       MultipartFile profileImage) throws IOException {
     log.debug("[Service] 유저 수정 시작: id={}", uuid);
     User user = userRepository.findById(uuid)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
+        .orElseThrow(() -> new UserNotFoundException());
 
     // username과 mail 중복성 검사
-    if (userReq.newUsername() != null && !Objects.equals(user.getUsername(),
-        userReq.newUsername())) {
+    if (userReq.newUsername() != null
+        && !Objects.equals(user.getUsername(), userReq.newUsername())) {
       validateDuplicateUsername(userReq.newUsername());
     }
-    if (userReq.newEmail() != null && !Objects.equals(user.getEmail(), userReq.newEmail())) {
+    if (userReq.newEmail() != null
+        && !Objects.equals(user.getEmail(), userReq.newEmail())) {
       validateDuplicateEmail(userReq.newEmail());
     }
 
-    Optional.ofNullable(userReq.newUsername()).ifPresent(user::updateUserName);
-    Optional.ofNullable(userReq.newPassword()).ifPresent(user::updatePassword);
-    Optional.ofNullable(userReq.newEmail()).ifPresent(user::updateEmail);
+    Optional.ofNullable(userReq.newUsername())
+        .filter(StringUtils::hasText)
+        .ifPresent(user::updateUserName);
+    Optional.ofNullable(userReq.newPassword())
+        .filter(StringUtils::hasText)
+        .ifPresent(user::updatePassword);
+    Optional.ofNullable(userReq.newEmail())
+        .filter(StringUtils::hasText)
+        .ifPresent(user::updateEmail);
 
     // 변경되는 프로필 이미지가 있으면
     processUpdateProfile(user, profileImage);
@@ -98,7 +108,7 @@ public class BasicUserService implements UserService {
   public void deleteUser(UUID uuid) {
     log.debug("[Service] 유저 삭제 시작: id={}", uuid);
     if (!userRepository.existsById(uuid)) {
-      throw new BusinessLogicException(ErrorCode.USER_NOT_FOUND);
+      throw new UserNotFoundException();
     }
 
     userRepository.deleteById(uuid);
@@ -107,13 +117,13 @@ public class BasicUserService implements UserService {
 
   private void validateDuplicateUsername(String username) {
     if (userRepository.existsByUsername(username)) {
-      throw new BusinessLogicException(ErrorCode.DUPLICATE_USERNAME);
+      throw new DuplicateUsernameException();
     }
   }
 
   private void validateDuplicateEmail(String email) {
     if (userRepository.existsByEmail(email)) {
-      throw new BusinessLogicException(ErrorCode.DUPLICATE_EMAIL);
+      throw new DuplicateEmailException();
     }
   }
 

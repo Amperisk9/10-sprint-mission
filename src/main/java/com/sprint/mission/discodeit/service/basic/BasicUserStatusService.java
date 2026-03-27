@@ -3,8 +3,9 @@ package com.sprint.mission.discodeit.service.basic;
 import com.sprint.mission.discodeit.dto.UserStatusDto;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.entity.UserStatus;
-import com.sprint.mission.discodeit.exception.BusinessLogicException;
-import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
+import com.sprint.mission.discodeit.exception.userstatus.UserStatusAlreadyExistsException;
+import com.sprint.mission.discodeit.exception.userstatus.UserStatusNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserStatusMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.repository.UserStatusRepository;
@@ -31,10 +32,10 @@ public class BasicUserStatusService implements UserStatusService {
   public UserStatusDto createUserStatus(UserStatusDto.UserStatusCreateRequest createReq) {
     UUID userId = createReq.userId();
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
+        .orElseThrow(() -> new UserNotFoundException());
     userStatusRepository.findByUserId(userId)
         .ifPresent(u -> {
-          throw new BusinessLogicException(ErrorCode.USERSTATUS_ALREADY_EXISTS);
+          throw new UserStatusAlreadyExistsException();
         });
 
     UserStatus status = new UserStatus();
@@ -48,7 +49,7 @@ public class BasicUserStatusService implements UserStatusService {
   public UserStatusDto findById(UUID uuid) {
     return userStatusRepository.findById(uuid)
         .map(this::toResponse)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.USERSTATUS_NOT_FOUND));
+        .orElseThrow(() -> new UserStatusNotFoundException());
   }
 
   @Override
@@ -63,7 +64,7 @@ public class BasicUserStatusService implements UserStatusService {
   public UserStatusDto updateUserStatus(UUID uuid,
       UserStatusDto.UserStatusUpdateRequest updateReq) {
     UserStatus userStatus = userStatusRepository.findById(uuid)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.USERSTATUS_NOT_FOUND));
+        .orElseThrow(() -> new UserStatusNotFoundException());
 
     userStatus.updateLastActiveAt(updateReq.newLastActiveAt());
     userStatusRepository.save(userStatus);
@@ -77,7 +78,7 @@ public class BasicUserStatusService implements UserStatusService {
       UserStatusDto.UserStatusUpdateRequest updateReq) {
     log.debug("[Service] UserStatus 수정 시작: userId={}", userId);
     UserStatus userStatus = userStatusRepository.findByUserId(userId)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.USERSTATUS_NOT_FOUND));
+        .orElseThrow(() -> new UserStatusNotFoundException());
 
     userStatus.updateLastActiveAt(updateReq.newLastActiveAt());
     userStatusRepository.save(userStatus);
@@ -91,7 +92,7 @@ public class BasicUserStatusService implements UserStatusService {
   @Override
   public void deleteUserStatusById(UUID uuid) {
     UserStatus userStatus = userStatusRepository.findById(uuid)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.USERSTATUS_NOT_FOUND));
+        .orElseThrow(() -> new UserStatusNotFoundException());
 
     userStatusRepository.deleteById(uuid);
   }

@@ -6,8 +6,9 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.exception.BusinessLogicException;
-import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
+import com.sprint.mission.discodeit.exception.message.MessageNotFoundException;
+import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.MessageMapper;
 import com.sprint.mission.discodeit.mapper.PageResponseMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
@@ -123,17 +124,17 @@ public class BasicMessageService implements MessageService {
 
   private Message getMessageOrThrow(UUID messageId) {
     return messageRepository.findById(messageId)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.MESSAGE_NOT_FOUND));
+        .orElseThrow(() -> new MessageNotFoundException());
   }
 
   private Channel getChannelOrThrow(UUID channelId) {
     return channelRepository.findById(channelId)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.CHANNEL_NOT_FOUND));
+        .orElseThrow(() -> new ChannelNotFoundException());
   }
 
   private User getUserOrThrow(UUID userId) {
     return userRepository.findById(userId)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
+        .orElseThrow(() -> new UserNotFoundException());
   }
 
   private MessageDto toResponse(Message msg) {

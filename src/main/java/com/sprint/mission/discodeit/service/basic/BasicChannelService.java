@@ -5,8 +5,10 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.exception.BusinessLogicException;
-import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
+import com.sprint.mission.discodeit.exception.channel.DuplicateTitleException;
+import com.sprint.mission.discodeit.exception.channel.PrivateChannelNotEditableException;
+import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.ChannelMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
@@ -22,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 @Slf4j
@@ -45,7 +48,7 @@ public class BasicChannelService implements ChannelService {
     // 참여자 목록의 유저가 user DB에 있는지 확인
     List<User> users = userRepository.findAllById(participantIds);
     if (participantIds.size() != users.size()) {
-      throw new BusinessLogicException(ErrorCode.USER_NOT_FOUND);
+      throw new UserNotFoundException();
     }
 
     Channel privateChannel = Channel.of(participantIds);
@@ -103,7 +106,7 @@ public class BasicChannelService implements ChannelService {
     Channel channel = getChannelOrThrow(uuid);
 
     if (channel.getType() == ChannelType.PRIVATE) {
-      throw new BusinessLogicException(ErrorCode.PRIVATE_CHANNEL_NOT_EDITABLE);
+      throw new PrivateChannelNotEditableException();
     }
 
     // name 중복성 검사
@@ -111,8 +114,12 @@ public class BasicChannelService implements ChannelService {
       validateDuplicateName(channelReq.newName());
     }
 
-    Optional.ofNullable(channelReq.newName()).ifPresent(channel::updateName);
-    Optional.ofNullable(channelReq.newDescription()).ifPresent(channel::updateDescription);
+    Optional.ofNullable(channelReq.newName())
+        .filter(StringUtils::hasText)
+        .ifPresent(channel::updateName);
+    Optional.ofNullable(channelReq.newDescription())
+        .filter(StringUtils::hasText)
+        .ifPresent(channel::updateDescription);
     channelRepository.save(channel);
     log.debug("[Service] 수정된 채널 저장 완료: id={}", channel.getId());
 
@@ -132,18 +139,19 @@ public class BasicChannelService implements ChannelService {
   }
 
   private void validateDuplicateName(String name) {
-    channelRepository.findByName(name)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.DUPLICATE_TITLE));
+    if (channelRepository.existsByName(name)) {
+      throw new DuplicateTitleException();
+    }
   }
 
   private Channel getChannelOrThrow(UUID channelId) {
     return channelRepository.findById(channelId)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.CHANNEL_NOT_FOUND));
+        .orElseThrow(() -> new ChannelNotFoundException());
   }
 
   private User getUserOrThrow(UUID userId) {
     return userRepository.findById(userId)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
+        .orElseThrow(() -> new UserNotFoundException());
   }
 
   private ChannelDto toResponse(Channel channel) {

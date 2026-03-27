@@ -4,8 +4,10 @@ import com.sprint.mission.discodeit.dto.ReadStatusDto;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
-import com.sprint.mission.discodeit.exception.BusinessLogicException;
-import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
+import com.sprint.mission.discodeit.exception.readstatus.ReadStatusAlreadyExistsException;
+import com.sprint.mission.discodeit.exception.readstatus.ReadStatusNotFoundException;
+import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.ReadStatusMapper;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
@@ -36,15 +38,15 @@ public class BasicReadStatusService implements ReadStatusService {
     log.debug("[Service] ReadStatus 생성 시작: userId={}, channelId={}, lastReadAt={}",
         createReq.userId(), createReq.channelId(), createReq.lastReadAt());
     User user = userRepository.findById(createReq.userId())
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.USER_NOT_FOUND));
+        .orElseThrow(() -> new UserNotFoundException());
     Channel channel = channelRepository.findById(createReq.channelId())
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.CHANNEL_NOT_FOUND));
+        .orElseThrow(() -> new ChannelNotFoundException());
 
     readStatusRepository.findAllByUserId(user.getId()).stream()
         .filter(r -> Objects.equals(r.getChannel().getId(), channel.getId()))
         .findFirst()
         .ifPresent(r -> {
-          throw new BusinessLogicException(ErrorCode.READSTATUS_ALREADY_EXISTS);
+          throw new ReadStatusAlreadyExistsException();
         });
 
     ReadStatus readStatus = new ReadStatus(user, channel);
@@ -58,7 +60,7 @@ public class BasicReadStatusService implements ReadStatusService {
   @Override
   public ReadStatusDto findById(UUID uuid) {
     ReadStatus readStatus = readStatusRepository.findById(uuid)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.READSTATUS_NOT_FOUND));
+        .orElseThrow(() -> new ReadStatusNotFoundException());
 
     return toResponse(readStatus);
   }
@@ -66,7 +68,7 @@ public class BasicReadStatusService implements ReadStatusService {
   @Override
   public List<ReadStatusDto> findAllByUserId(UUID userId) {
     if (!userRepository.existsById(userId)) {
-      throw new BusinessLogicException(ErrorCode.USER_NOT_FOUND);
+      throw new UserNotFoundException();
     }
 
     return readStatusRepository.findAllByUserId(userId).stream()
@@ -81,7 +83,7 @@ public class BasicReadStatusService implements ReadStatusService {
     log.debug("[Service] ReadStatus 수정 시작: id={}, newLastReadAt={}",
         uuid, updateReq.newLastReadAt());
     ReadStatus readStatus = readStatusRepository.findById(uuid)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.READSTATUS_NOT_FOUND));
+        .orElseThrow(() -> new ReadStatusNotFoundException());
 
     readStatus.updateLastReadAt(updateReq.newLastReadAt());
     readStatusRepository.save(readStatus);

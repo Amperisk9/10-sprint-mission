@@ -105,7 +105,7 @@ public class UserController {
   })
   @PatchMapping("/{user-id}/userStatus")
   public ResponseEntity<UserStatusDto> updateLastActive(@PathVariable("user-id") UUID userId,
-      @RequestBody UserStatusDto.UserStatusUpdateRequest updateReq) {
+      @Valid @RequestBody UserStatusDto.UserStatusUpdateRequest updateReq) {
     log.info("[Controller] UserStatus 수정 요청: id={}, newLastActiveAt={}",
         userId, updateReq.newLastActiveAt());
 

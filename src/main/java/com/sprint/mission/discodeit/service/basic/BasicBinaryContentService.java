@@ -2,8 +2,7 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.BinaryContentDto;
 import com.sprint.mission.discodeit.entity.BinaryContent;
-import com.sprint.mission.discodeit.exception.BusinessLogicException;
-import com.sprint.mission.discodeit.exception.ErrorCode;
+import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoundException;
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
@@ -50,7 +49,7 @@ public class BasicBinaryContentService implements BinaryContentService {
   public BinaryContentDto findById(UUID uuid) {
     return binaryContentRepository.findById(uuid)
         .map(this::toResponse)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.BINARYCONTENT_NOT_FOUND));
+        .orElseThrow(() -> new BinaryContentNotFoundException());
   }
 
   @Override
@@ -66,7 +65,7 @@ public class BasicBinaryContentService implements BinaryContentService {
     log.debug("[Service] 첨부파일 삭제 시작: id={}", uuid);
 
     binaryContentRepository.findById(uuid)
-        .orElseThrow(() -> new BusinessLogicException(ErrorCode.BINARYCONTENT_NOT_FOUND));
+        .orElseThrow(() -> new BinaryContentNotFoundException());
     binaryContentStorage.delete(uuid);
     log.debug("[Service] 첨부파일 물리적 삭제 완료: id={}", uuid);
 
