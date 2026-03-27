@@ -16,6 +16,10 @@ spring:
     properties:
       hibernate:
         default_batch_fetch_size: 100     # 한 쿼리문 batch size 개수
+  servlet:
+    multipart:
+      max-file-size: 1MB
+      max-request-size: 10MB
 #        format_sql: true
 
 discodeit:
@@ -33,3 +37,31 @@ logging.level:
   org.hibernate.SQL: info                  # SQL 실행
 #  org.hibernate.orm.jdbc.bind: trace      # 파라미터 설정(DB에 보내는 값)
 #  org.hibernate.orm.jdbc.extract: trace   # 결과 읽기(DB에서 받아온 값)
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, loggers
+  info.env.enabled: true
+
+info:
+  app:
+    name: Discodeit
+    version: 0.0.1
+    java-version: 17
+    spring-boot-version: 3.5.10
+  configuration:
+    datasource:
+      url: ${spring.datasource.url}
+      driver: ${spring.datasource.driver-class-name}
+    jpa:
+      ddl-auto: ${spring.jpa.hibernate.ddl-auto}
+    storage:
+      type: ${discodeit.storage.type}
+      path: ${discodeit.storage.local.root-path}
+    multipart:
+      # ${}에 감싸져 있는 참조값은 default값이 있어도 파일에 명시해야 ${}가 제기능을 발휘함
+      max-file-size: ${spring.servlet.multipart.max-file-size}
+      max-request-size: ${spring.servlet.multipart.max-request-size}
+
