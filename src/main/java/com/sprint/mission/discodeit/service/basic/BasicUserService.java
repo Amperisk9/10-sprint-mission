@@ -48,7 +48,6 @@ public class BasicUserService implements UserService {
     // userStatus 관련
     UserStatus status = new UserStatus();
     user.updateStatus(status);
-    userRepository.save(user);
     log.debug("[Service] UserStatus 저장 완료: id={}, userId={}", status.getId(), user.getId());
 
     // profile 이미지를 같이 추가하면
