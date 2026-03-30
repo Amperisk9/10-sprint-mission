@@ -6,7 +6,7 @@ import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
-import com.sprint.mission.discodeit.exception.channel.DuplicateTitleException;
+import com.sprint.mission.discodeit.exception.channel.DuplicateNameException;
 import com.sprint.mission.discodeit.exception.channel.PrivateChannelNotEditableException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.ChannelMapper;
@@ -143,7 +143,7 @@ public class BasicChannelService implements ChannelService {
 
   private void validateDuplicateName(String name) {
     if (channelRepository.existsByName(name)) {
-      throw new DuplicateTitleException();
+      throw new DuplicateNameException();
     }
   }
 

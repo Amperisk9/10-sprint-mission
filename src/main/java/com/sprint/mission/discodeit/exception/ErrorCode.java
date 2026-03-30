@@ -15,7 +15,7 @@ public enum ErrorCode {
 
   // Channel
   CHANNEL_NOT_FOUND("채널을 찾을 수 없습니다"),
-  DUPLICATE_TITLE("중복된 채널명 입니다"),
+  DUPLICATE_NAME("중복된 채널명 입니다"),
   PRIVATE_CHANNEL_NOT_EDITABLE("Private 채널은 수정할 수 없습니다"),
 
   // BinaryContent
