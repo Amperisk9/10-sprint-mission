@@ -87,11 +87,12 @@ public class BasicChannelService implements ChannelService {
   public List<ChannelDto> findAllByUserId(UUID userId) {
     getUserOrThrow(userId);
 
-    // TODO 이부분 SQL도 수정해야하고 왜 RemoveParticipants로 바뀌었는지도 찾아서 해결해야 함
     // PUBLIC 채널 전부 + userId가 참여한 PRIVATE 채널(JPQL 처리)
-//        List<ChannelDto.RemoveParticipants> channels = channelRepository.findAllByUserId(userId);
-//        if (channels.isEmpty()) return List.of();
-//        return mapper.toDto(channels);
+//    List<ChannelSummary> channels = channelRepository.findAllByUserId(userId);
+//    if (channels.isEmpty()) {
+//      return List.of();
+//    }
+//    return mapper.toDto(channels);
 
     return channelRepository.findAll().stream()
         // PUBLIC 채널 전부 + userId가 참여한 PRIVATE 채널

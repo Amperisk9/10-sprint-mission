@@ -34,8 +34,8 @@ public record ChannelDto(
 
   }
 
-  public record RemoveParticipants(UUID id, ChannelType type, String name, String description,
-                                   Instant lastMessageAt) {
+  public record ChannelSummary(UUID id, ChannelType type, String name, String description,
+                               Instant lastMessageAt) {
 
   }
 }
