@@ -11,7 +11,9 @@ import com.sprint.mission.discodeit.repository.MessageRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.mapstruct.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,14 +46,16 @@ public abstract class ChannelMapper {
     );
   }
 
-  public List<ChannelDto> toDto(List<ChannelSummary> channels) {
+  public List<ChannelDto> toDto(
+      List<ChannelSummary> channels,
+      Map<UUID, List<UserDto>> participants) {
     return channels.stream()
         .map(c -> new ChannelDto(
             c.id(),
             c.type(),
             c.name(),
             c.description(),
-            getParticipants(c.type(), c.id()),
+            participants.getOrDefault(c.id(), Collections.emptyList()),
             c.lastMessageAt()
         ))
         .toList();

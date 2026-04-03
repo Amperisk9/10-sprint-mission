@@ -1,6 +1,8 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.dto.ChannelDto;
+import com.sprint.mission.discodeit.dto.ChannelDto.ChannelSummary;
+import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
 import com.sprint.mission.discodeit.entity.ReadStatus;
@@ -10,6 +12,7 @@ import com.sprint.mission.discodeit.exception.channel.DuplicateNameException;
 import com.sprint.mission.discodeit.exception.channel.PrivateChannelNotEditableException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.ChannelMapper;
+import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.MessageRepository;
@@ -18,9 +21,11 @@ import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.ChannelService;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,7 +43,8 @@ public class BasicChannelService implements ChannelService {
   private final MessageRepository messageRepository;
   private final UserRepository userRepository;
   private final BinaryContentRepository binaryContentRepository;
-  private final ChannelMapper mapper;
+  private final ChannelMapper channelMapper;
+  private final UserMapper userMapper;
 
   @Transactional
   @Override
@@ -88,18 +94,20 @@ public class BasicChannelService implements ChannelService {
     getUserOrThrow(userId);
 
     // PUBLIC 채널 전부 + userId가 참여한 PRIVATE 채널(JPQL 처리)
-//    List<ChannelSummary> channels = channelRepository.findAllByUserId(userId);
-//    if (channels.isEmpty()) {
-//      return List.of();
-//    }
-//    return mapper.toDto(channels);
+    List<ChannelSummary> channels = channelRepository.findAllByUserId(userId);
+    List<UUID> privateChannelsId = channels.stream()
+        .filter(s -> s.type() == ChannelType.PRIVATE)
+        .map(ChannelSummary::id).toList();
 
-    return channelRepository.findAll().stream()
-        // PUBLIC 채널 전부 + userId가 참여한 PRIVATE 채널
-        .filter(c -> Objects.equals(c.getType(), ChannelType.PUBLIC)
-            || readStatusRepository.existsByChannelIdAndUserId(c.getId(), userId))
-        .map(this::toResponse)
-        .toList();
+    Map<UUID, List<UserDto>> participants = readStatusRepository.findAllByChannelIdIn(
+            privateChannelsId)
+        .stream()
+        .collect(Collectors.groupingBy(
+            rs -> rs.getChannel().getId(),    // 채널 UUID 기반으로 그룹핑
+            Collectors.mapping(rs -> userMapper.toDto(rs.getUser()), Collectors.toList())
+        ));
+
+    return channelMapper.toDto(channels, participants);
   }
 
   @Transactional
@@ -159,6 +167,6 @@ public class BasicChannelService implements ChannelService {
   }
 
   private ChannelDto toResponse(Channel channel) {
-    return mapper.toDto(channel);
+    return channelMapper.toDto(channel);
   }
 }
