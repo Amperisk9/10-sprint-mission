@@ -1,27 +1,34 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 
 import com.sprint.mission.discodeit.dto.ChannelDto;
+import com.sprint.mission.discodeit.dto.ChannelDto.ChannelSummary;
 import com.sprint.mission.discodeit.dto.ChannelDto.PrivateChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.ChannelDto.PublicChannelCreateRequest;
 import com.sprint.mission.discodeit.dto.ChannelDto.PublicChannelUpdateRequest;
+import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.ChannelType;
+import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.channel.DuplicateNameException;
 import com.sprint.mission.discodeit.exception.channel.PrivateChannelNotEditableException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.ChannelMapper;
+import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.ChannelRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
@@ -47,7 +54,9 @@ class BasicChannelServiceTest {
   @Mock
   UserRepository userRepository;
   @Mock
-  ChannelMapper mapper;
+  ChannelMapper channelMapper;
+  @Mock
+  UserMapper userMapper;
 
   @InjectMocks
   BasicChannelService channelService;
@@ -63,7 +72,7 @@ class BasicChannelServiceTest {
       ChannelDto expectedDto = new ChannelDto(UUID.randomUUID(), ChannelType.PUBLIC, request.name(),
           request.description(), null, null);
       given(channelRepository.existsByName(request.name())).willReturn(false);
-      given(mapper.toDto(any(Channel.class))).willReturn(expectedDto);
+      given(channelMapper.toDto(any(Channel.class))).willReturn(expectedDto);
 
       // when
       ChannelDto actualDto = channelService.createChannel(request);
@@ -106,7 +115,7 @@ class BasicChannelServiceTest {
 
       ChannelDto expectedDto = new ChannelDto(UUID.randomUUID(), ChannelType.PRIVATE,
           null, null, List.of(), null);
-      given(mapper.toDto(any(Channel.class))).willReturn(expectedDto);
+      given(channelMapper.toDto(any(Channel.class))).willReturn(expectedDto);
 
       // when
       ChannelDto actualDto = channelService.createChannel(
@@ -148,7 +157,7 @@ class BasicChannelServiceTest {
       given(channelRepository.findById(any(UUID.class)))
           .willReturn(Optional.of(existingPublicChannel));
       given(channelRepository.existsByName(anyString())).willReturn(false);
-      given(mapper.toDto(any(Channel.class))).willReturn(expectedDto);
+      given(channelMapper.toDto(any(Channel.class))).willReturn(expectedDto);
 
       // when
       ChannelDto actualDto = channelService.updateChannel(UUID.randomUUID(), request);
@@ -235,23 +244,46 @@ class BasicChannelServiceTest {
     @DisplayName("유저가 존재할 경우 참여한 채널을 찾아서 List<ChannelDto> 반환")
     void should_return_List_channelDto_when_userId_exists() {
       // given
-      User user = new User("A", "AA", "A@gmail.com");
-      Channel publicChannel = Channel.of(null, null);   // public
-      Channel privateChannel = Channel.of(List.of());                  // private
-      List<Channel> channels = List.of(publicChannel, privateChannel);
-      ChannelDto expectedDto = new ChannelDto(null, null, null, null, null, null);
+      UUID publicChannelId = UUID.randomUUID();
+      UUID privateChannelId = UUID.randomUUID();
 
-      given(userRepository.findById(any(UUID.class))).willReturn(Optional.of(user));
-      given(channelRepository.findAll()).willReturn(channels);
-      given(readStatusRepository.existsByChannelIdAndUserId(any(), any(UUID.class)))
-          .willReturn(true);
-      given(mapper.toDto(any(Channel.class))).willReturn(expectedDto);
+      User user1 = new User("A", "AA", "A@gmail.com");
+      User user2 = new User("B", "BB", "B@outlook.com");
+
+      List<ChannelSummary> summaries = List.of(
+          new ChannelSummary(publicChannelId, ChannelType.PUBLIC, null, null, null),
+          new ChannelSummary(privateChannelId, ChannelType.PRIVATE, null, null, null));
+
+      Channel mockPrivateChannel = mock(Channel.class);
+      ReadStatus readStatus1 = new ReadStatus(user1, mockPrivateChannel);
+      ReadStatus readStatus2 = new ReadStatus(user2, mockPrivateChannel);
+      given(mockPrivateChannel.getId()).willReturn(privateChannelId);
+
+      UserDto userDto = new UserDto(null, null, null, null, null);
+
+      given(userRepository.findById(any(UUID.class))).willReturn(Optional.of(user1));
+      given(channelRepository.findAllByUserId(any(UUID.class))).willReturn(summaries);
+      given(readStatusRepository.findAllByChannelIdIn(anyList()))
+          .willReturn(List.of(readStatus1, readStatus2));
+      given(userMapper.toDto(any(User.class))).willReturn(userDto);
+
+      UserDto userDto1 = new UserDto(null, "A", "A@gmail.com", null, null);
+      UserDto userDto2 = new UserDto(null, "B", "B@outlook.com", null, null);
+      List<ChannelDto> expectedDtos = List.of(
+          new ChannelDto(publicChannelId, ChannelType.PUBLIC, null, null, null, null),
+          new ChannelDto(privateChannelId, ChannelType.PRIVATE, null, null,
+              List.of(userDto1, userDto2), null));
+      given(channelMapper.toDto(anyList(), anyMap())).willReturn(expectedDtos);
 
       // when
       List<ChannelDto> actualDtos = channelService.findAllByUserId(UUID.randomUUID());
 
       // then
-      assertEquals(channels.size(), actualDtos.size());
+      assertThat(actualDtos)
+          .hasSize(2)
+          .filteredOn(c -> c.type() == ChannelType.PRIVATE)
+          .flatExtracting(ChannelDto::participants)
+          .hasSize(2);
     }
 
     @Test
