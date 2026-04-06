@@ -1,13 +1,8 @@
-db:
-  host: localhost
-  port: 5432
-
 spring:
   profiles:
     active: dev
   application:
     name: discodeit
-  sql.init.mode: always
   jpa:
     hibernate:
       ddl-auto: none
