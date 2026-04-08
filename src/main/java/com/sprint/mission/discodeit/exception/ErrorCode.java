@@ -29,7 +29,8 @@ public enum ErrorCode {
   READ_STATUS_NOT_FOUND("존재하지 않는 readStatus입니다"),
 
   // S3
-  S3_UPLOAD_FAIL("S3 업로드 실패");
+  AWS_S3_DOWNLOAD_FAIL("S3 다운로드 실패"),
+  AWS_S3_UPLOAD_FAIL("S3 업로드 실패");
 
 
   private final String message;
