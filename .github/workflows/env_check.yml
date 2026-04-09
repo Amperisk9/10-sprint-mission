@@ -1,6 +1,6 @@
 on:
   push:
-    branches: [ "spring8" ]
+    branches: [ "sprint8" ]
 
 jobs:
   test:
