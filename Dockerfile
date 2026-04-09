@@ -1,5 +1,6 @@
 # BUILDER STAGE
-FROM gradle:8.14-jdk17 AS builder
+# 멀티플랫폼 빌드시 에뮬레이터로 빌드 방지용
+FROM --platform=$BUILDPLATFORM gradle:8.14-jdk17 AS builder
 WORKDIR /build
 
 # Gradle 메타 복사
@@ -7,10 +8,9 @@ COPY gradlew gradlew
 COPY gradle gradle
 COPY settings.gradle settings.gradle
 COPY build.gradle build.gradle
-# 테스트를 제외한 빌드를 실행하고, 실패해도 의존성만 받기
-# && 의존성 미리 받기
-RUN ./gradlew --no-daemon build -x test || true \
- && ./gradlew --no-daemon dependencies || true
+
+# 의존성만 다운로드
+RUN ./gradlew --no-daemon dependencies || true
 
 # 파일복사(프로젝트 루트에 있는 파일들을 /build에 복사)
 COPY . .

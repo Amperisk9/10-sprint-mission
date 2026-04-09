@@ -1,0 +1,11 @@
+on:
+  push:
+    branches: [ "spring8" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 모든 환경 변수 출력해보기
+        run: env | sort
