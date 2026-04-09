@@ -39,5 +39,5 @@ out/
 ### Project ###
 .discodeit
 .logs
-.env
+*.env
 *.pem
