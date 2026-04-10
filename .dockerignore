@@ -5,6 +5,7 @@
 
 # 빌드 결과물 (JAR만 복사할 것이므로 소스 내 빌드 폴더는 제외)
 build/
+!build/libs/*.jar
 bin/
 out/
 
