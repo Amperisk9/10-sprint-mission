@@ -51,12 +51,13 @@ jobs:
       - name: Docker Build and Push
         id: push
         run: |
-          echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
-          echo "REPO_URI=${{ vars.ECR_REPOSITORY_URI }}" >> $GITHUB_ENV
+          IMAGE_TAG=${GITHUB_SHA::7}
+          REPO_URI=${{ vars.ECR_REPOSITORY_URI }}
+          
           docker build -t $REPO_URI:$IMAGE_TAG -t $REPO_URI:latest .
           docker push $REPO_URI:$IMAGE_TAG
           docker push $REPO_URI:latest
-          echo "IMAGE_URI=$REPO_URI:latest" >> $GITHUB_OUT
+          echo "IMAGE_URI=$REPO_URI:latest" >> $GITHUB_OUTPUT
 
     outputs:
       image_uri: ${{ steps.push.outputs.IMAGE_URI }}
