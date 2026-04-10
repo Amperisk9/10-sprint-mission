@@ -86,7 +86,7 @@ jobs:
         id: render-app
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition-arn: ${{ secrets.ECS_TASK_DEFINITION }} # AWS에서 최신 Task 정의서 가져옴
+          task-definition-arn: ${{ secrets.ECS_TASK_DEFINITION_ARN }} # AWS에서 최신 Task 정의서 가져옴
           image: ${{ needs.build-and-push.outputs.image_uri }}
           container-name: discodeit-app
 
