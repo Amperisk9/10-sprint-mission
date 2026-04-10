@@ -76,8 +76,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6.1.0
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
 
       # 태스크 재정의
@@ -85,7 +85,7 @@ jobs:
         id: render-app
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition-arn: ${{ secrets.ECS_TASK_DEFINITION }}
+          task-definition-arn: ${{ secrets.ECS_TASK_DEFINITION }} # AWS에서 최신 Task 정의서 가져옴
           image: ${{ needs.build-and-push.outputs.image_uri }}
           container-name: discodeit-app
 
