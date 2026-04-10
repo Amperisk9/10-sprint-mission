@@ -14,6 +14,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 import software.amazon.awssdk.services.s3.S3Client;
 
+@DisabledIfEnvironmentVariable(named = "GITHUB_ACTIONS", matches = "true")
 @SpringBootTest(properties = "discodeit.storage.type=s3") // application설정 강제적용된 상태로 실행
 @TestPropertySource(locations = "file:.env")
 class S3BinaryContentStorageTest {
