@@ -137,7 +137,7 @@ class MessageRepositoryTest {
 
       Message msg1 = new Message(channel, user, "first");
       messageRepository.save(msg1);
-      Thread.sleep(100);
+      Thread.sleep(1000);
       Message latest = new Message(channel, user, "latest");
       messageRepository.save(latest);
 
