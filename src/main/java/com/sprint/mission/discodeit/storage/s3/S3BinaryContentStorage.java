@@ -9,14 +9,18 @@ import java.io.InputStream;
 import java.net.URI;
 import java.time.Duration;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -24,23 +28,41 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequ
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
 @ConditionalOnProperty(name = "discodeit.storage.type", havingValue = "s3")
 public class S3BinaryContentStorage implements BinaryContentStorage {
 
   private final S3Client s3Client;
   private final S3Presigner s3Presigner;
 
-  @Value("${discodeit.storage.s3.access-key}")
-  private String accessKey;
-  @Value("${discodeit.storage.s3.secret-key}")
-  private String secretKey;
-  @Value("${discodeit.storage.s3.region}")
-  private String region;
-  @Value("${discodeit.storage.s3.bucket}")
-  private String bucket;
-  @Value("${discodeit.storage.s3.presigned-url-expiration}")
-  private long presignedUrlExpiration;
+  private final String accessKey;
+  private final String secretKey;
+  private final String region;
+  private final String bucket;
+  private final long presignedUrlExpiration;
+
+  public S3BinaryContentStorage(
+      @Value("${discodeit.storage.s3.access-key}") String accessKey,
+      @Value("${discodeit.storage.s3.secret-key}") String secretKey,
+      @Value("${discodeit.storage.s3.region}") String region,
+      @Value("${discodeit.storage.s3.bucket}") String bucket,
+      @Value("${discodeit.storage.s3.presigned-url-expiration}") long presignedUrlExpiration) {
+    this.accessKey = accessKey;
+    this.secretKey = secretKey;
+    this.region = region;
+    this.bucket = bucket;
+    this.presignedUrlExpiration = presignedUrlExpiration;
+
+    s3Client = S3Client.builder()
+        .region(Region.of(region))
+        .credentialsProvider(getCredentialsProvider())
+        .build();
+
+    s3Presigner = S3Presigner.builder()
+        .region(Region.of(region))
+        .credentialsProvider(getCredentialsProvider())
+        .build();
+  }
+
 
   @Override
   public UUID put(UUID binaryContentId, byte[] bytes) {
@@ -95,5 +117,15 @@ public class S3BinaryContentStorage implements BinaryContentStorage {
             .signatureDuration(Duration.ofSeconds(presignedUrlExpiration))); // 유효기간(단위: 초))
 
     return presignedRequest.url().toString();
+  }
+
+
+  private AwsCredentialsProvider getCredentialsProvider() {
+    return this.accessKey != null && !this.accessKey.isBlank()
+        // 수동탐색 방식: (.env, yaml 설정파일 사용)
+        ? StaticCredentialsProvider.create(
+        AwsBasicCredentials.create(this.accessKey, this.secretKey))
+        // 자동탐색 방식: (Java 시스템 속성 -> 환경 변수 -> 자격 증명 파일(AWS CLI 설정값) -> 컨테이너/EC2(IAM ROLE))
+        : DefaultCredentialsProvider.create();
   }
 }

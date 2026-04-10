@@ -6,21 +6,28 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.sprint.mission.discodeit.dto.BinaryContentDto;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Base64;
+import java.util.Properties;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 @DisabledIfEnvironmentVariable(named = "GITHUB_ACTIONS", matches = "true")
@@ -30,12 +37,33 @@ class S3BinaryContentStorageTest {
 
   @Autowired
   private S3BinaryContentStorage storage;
-  @Autowired
-  private S3Client s3Client;
-  @Value("${discodeit.storage.s3.bucket}")
-  private String bucket;
-
   private UUID testId;
+
+  private static String accessKey;
+  private static String secretKey;
+  private static String region;
+  private static String bucket;
+
+  private static S3Client s3Client;
+
+
+  @BeforeAll
+  static void SetUp() throws IOException {
+    Properties props = new Properties();
+    try (FileReader reader = new FileReader(".env")) {
+      props.load(reader);
+    }
+
+    accessKey = props.getProperty("AWS_S3_ACCESS_KEY");
+    secretKey = props.getProperty("AWS_S3_SECRET_KEY");
+    region = props.getProperty("AWS_S3_REGION");
+    bucket = props.getProperty("AWS_S3_BUCKET");
+
+    s3Client = S3Client.builder()
+        .region(Region.of(region))
+        .credentialsProvider(getCredentialsProvider())
+        .build();
+  }
 
   @AfterEach
   void dataDelete() {
@@ -116,5 +144,14 @@ class S3BinaryContentStorageTest {
       });
 
     }
+  }
+
+  private static AwsCredentialsProvider getCredentialsProvider() {
+    return accessKey != null && !accessKey.isBlank()
+        // 수동탐색 방식: (.env, yaml 설정파일 사용)
+        ? StaticCredentialsProvider.create(
+        AwsBasicCredentials.create(accessKey, secretKey))
+        // 자동탐색 방식: (Java 시스템 속성 -> 환경 변수 -> 자격 증명 파일(AWS CLI 설정값) -> 컨테이너/EC2(IAM ROLE))
+        : DefaultCredentialsProvider.create();
   }
 }
