@@ -94,8 +94,8 @@ jobs:
       - name: Existing Service Stop
         run: |
           aws ecs update-service \
-          --cluster ${{ secrets.ECS_CLUSTER }} \
-          --service ${{ secrets.ECS_SERVICE }} \
+          --cluster ${{ vars.ECS_CLUSTER }} \
+          --service ${{ vars.ECS_SERVICE }} \
           --desired-count 0
 
       # 서비스 배포
