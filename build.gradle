@@ -54,6 +54,12 @@ tasks.named('test') {
 
 test {
     finalizedBy jacocoTestReport
+    testLogging {    // 테스트 실패시 GithubActions에 로그 출력
+        events "failed"
+        exceptionFormat "full"
+        showCauses true
+        showStackTraces true
+    }
 }
 
 jacocoTestReport {
