@@ -1,34 +1,54 @@
 package com.sprint.mission.discodeit.entity;
 
-import java.util.UUID;
+import com.sprint.mission.discodeit.entity.base.BaseUpdatableEntity;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-public class Message extends BaseEntity{
+import java.util.*;
+
+@Entity
+@NoArgsConstructor
+@Table(name = "messages")
+@Getter
+public class Message extends BaseUpdatableEntity {
+    @Column(nullable = true)
     private String content;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "channel_id")
     private Channel channel;
-    private User user;
 
-    public User getUser() {
-        return user;
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id")
+    private User author;
 
-    public Channel getChannel() {
-        return channel;
-    }
+    @OneToMany(cascade = { CascadeType.PERSIST, CascadeType.REMOVE }, orphanRemoval = true)
+    @JoinTable(
+            name = "message_attachments",
+            joinColumns = @JoinColumn(name = "message_id"),
+            inverseJoinColumns = @JoinColumn(name = "attachment_id")
+    )
+    private final List<BinaryContent> attachments = new ArrayList<>();
 
-    public String getContent() {
-        return content;
-    }
-
-    public void updateContent(String newContent){
-        this.content = newContent;
-        super.setUpdatedAt(System.currentTimeMillis());
-    }
-
-    public Message(String content, Channel channel, User user) {
-        this.content = content;
+    public Message(Channel channel, User author, String content) {
+        super();
         this.channel = channel;
-        this.user = user;
+        this.author = author;
+        this.content = content;
     }
 
+    public List<BinaryContent> getAttachments() {
+        return Collections.unmodifiableList(this.attachments);
+    }
+    public void addAttachment(BinaryContent attachment) {
+        this.attachments.add(attachment);
+    }
+    public void removeAttachment(BinaryContent attachment) {
+        this.attachments.remove(attachment);
+    }
 
+    public void updateMessage(String message) {
+        this.content = message;
+    }
 }
