@@ -1,11 +1,13 @@
 package com.sprint.mission.discodeit.config;
 
+import com.sprint.mission.discodeit.auth.LoginFailureHandler;
+import com.sprint.mission.discodeit.auth.LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.function.Supplier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,13 +19,21 @@ import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
 import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 import org.springframework.util.StringUtils;
 
+@RequiredArgsConstructor
 @Configuration
 public class SecurityConfig {
+
+  private final LoginSuccessHandler loginSuccessHandler;
+  private final LoginFailureHandler loginFailureHandler;
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     SecurityFilterChain chain = http
-        .formLogin(Customizer.withDefaults())
+        .formLogin(login -> login
+            .loginProcessingUrl("/api/auth/login")
+            .successHandler(loginSuccessHandler)
+            .failureHandler(loginFailureHandler)
+        )
 
         .csrf(csrf -> csrf
             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())

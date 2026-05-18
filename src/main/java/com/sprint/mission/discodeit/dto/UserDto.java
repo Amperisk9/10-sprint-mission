@@ -12,12 +12,6 @@ public record UserDto(
     Boolean online
 ) {
 
-  public record UserLoginRequest(
-      @NotBlank String username,
-      @NotBlank String password) {
-
-  }
-
   public record UserCreateRequest(
       @NotBlank String username,
       @NotBlank String password,
