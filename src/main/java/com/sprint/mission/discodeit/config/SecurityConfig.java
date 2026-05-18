@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,8 +20,12 @@ import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
 import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.StringUtils;
 
+@EnableMethodSecurity()
 @RequiredArgsConstructor
 @Configuration
 public class SecurityConfig {
@@ -30,6 +35,9 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    RequestMatcher apiMatcher = PathPatternRequestMatcher.withDefaults().matcher("/api/**");
+    RequestMatcher nonApiMatcher = new NegatedRequestMatcher(apiMatcher);
+
     SecurityFilterChain chain = http
         .formLogin(login -> login
             .loginProcessingUrl("/api/auth/login")
@@ -44,6 +52,14 @@ public class SecurityConfig {
         .csrf(csrf -> csrf
             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
             .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
+        )
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/api/auth/csrf-token").permitAll()
+            .requestMatchers("/api/users").permitAll()
+            .requestMatchers("/api/auth/login").permitAll()
+            .requestMatchers("/api/auth/logout").permitAll()
+            .requestMatchers(nonApiMatcher).permitAll()
+            .anyRequest().authenticated()
         )
         .build();
 
