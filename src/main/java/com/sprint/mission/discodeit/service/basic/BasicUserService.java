@@ -91,7 +91,7 @@ public class BasicUserService implements UserService {
         .ifPresent(user::updateUserName);
     Optional.ofNullable(userReq.newPassword())
         .filter(StringUtils::hasText)
-        .ifPresent(user::updatePassword);
+        .ifPresent(password -> user.updatePassword(passwordEncoder.encode(password)));
     Optional.ofNullable(userReq.newEmail())
         .filter(StringUtils::hasText)
         .ifPresent(user::updateEmail);

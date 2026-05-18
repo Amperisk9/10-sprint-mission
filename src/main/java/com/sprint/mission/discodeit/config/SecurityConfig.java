@@ -31,7 +31,6 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     SecurityFilterChain chain = http
-//        .headers(header -> header.frameOptions(FrameOptionsConfig::sameOrigin))
         .formLogin(login -> login
             .loginProcessingUrl("/api/auth/login")
             .successHandler(loginSuccessHandler)
