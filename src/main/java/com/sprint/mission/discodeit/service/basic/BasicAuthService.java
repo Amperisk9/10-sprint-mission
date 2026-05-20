@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import com.sprint.mission.discodeit.auth.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.UserDto.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.entity.User;
@@ -10,6 +11,8 @@ import com.sprint.mission.discodeit.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +24,7 @@ public class BasicAuthService implements AuthService {
 
   private final UserRepository userRepository;
   private final UserMapper userMapper;
+  private final SessionRegistry sessionRegistry;
 
   @PreAuthorize("hasRole('ADMIN')")
   @Transactional
@@ -36,7 +40,14 @@ public class BasicAuthService implements AuthService {
         .orElseThrow(() -> new UserNotFoundException());
 
     findUser.updateRole(request.newRole());
+    UserDto userDto = userMapper.toDto(findUser);
+
+    // 세션만료
+    DiscodeitUserDetails targetDetails = new DiscodeitUserDetails(userDto, null);
+    sessionRegistry.getAllSessions(targetDetails, false).forEach(SessionInformation::expireNow);
+    log.debug("유저 세션 삭제 완료 - userId={}", request.userId());
+
     log.info("유저 role 변경 성공 - userId={}, newRole={}", request.userId(), request.newRole());
-    return userMapper.toDto(findUser);
+    return userDto;
   }
 }
