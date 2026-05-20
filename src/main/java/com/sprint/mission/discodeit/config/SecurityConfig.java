@@ -1,11 +1,11 @@
 package com.sprint.mission.discodeit.config;
 
+import com.sprint.mission.discodeit.auth.DiscodeitUserDetailsService;
 import com.sprint.mission.discodeit.auth.LoginFailureHandler;
 import com.sprint.mission.discodeit.auth.LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.function.Supplier;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -35,15 +35,15 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.StringUtils;
 
 @EnableMethodSecurity(prePostEnabled = true)
-@RequiredArgsConstructor
 @Configuration
 public class SecurityConfig {
 
-  private final LoginSuccessHandler loginSuccessHandler;
-  private final LoginFailureHandler loginFailureHandler;
-
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  public SecurityFilterChain filterChain(
+      HttpSecurity http,
+      LoginSuccessHandler loginSuccessHandler,
+      LoginFailureHandler loginFailureHandler,
+      DiscodeitUserDetailsService discodeitUserDetailsService) throws Exception {
     RequestMatcher apiMatcher = PathPatternRequestMatcher.withDefaults().matcher("/api/**");
     RequestMatcher nonApiMatcher = new NegatedRequestMatcher(apiMatcher);
 
@@ -77,10 +77,18 @@ public class SecurityConfig {
         .sessionManagement(session -> session
             .sessionConcurrency(concurrency -> concurrency
                 .maximumSessions(1)
-                .maxSessionsPreventsLogin(true)    // 새로운 사용자 로그인 방지
+                .maxSessionsPreventsLogin(false)    // 기존 세션 밀어내기
                 .sessionRegistry(getSessionRegistry())
             )
         )
+        .rememberMe(me -> me
+            .rememberMeParameter("remember-me")               // 로그인 폼 파라미터명
+            .rememberMeCookieName("discodeit-remember-me")  // 쿠키 이름
+            .tokenValiditySeconds(7 * 24 * 60 * 60)             // 7일 유지
+            .key("my-remember-key")                                         // 쿠키 생성 시 서명 키
+            .userDetailsService(discodeitUserDetailsService)
+        )
+
         .build();
 
     chain.getFilters().forEach(filter -> System.out.println(filter.getClass().getName()));
