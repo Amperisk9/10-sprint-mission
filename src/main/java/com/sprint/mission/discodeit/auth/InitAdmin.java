@@ -28,7 +28,7 @@ public class InitAdmin implements ApplicationRunner {
     try {
       UserCreateRequest request = new UserCreateRequest("admin", "pw123", "admin@gmail.com");
       UserDto adminDto = userService.createUser(request, null);
-      authService.updateRole(new UserRoleUpdateRequest(adminDto.id(), Role.ADMIN));
+      authService.updateRoleInner(new UserRoleUpdateRequest(adminDto.id(), Role.ADMIN));
       log.info("Admin 계정 생성됨");
     } catch (DuplicateUsernameException | DuplicateEmailException e) {
       log.warn("Admin이 이미 존재함");

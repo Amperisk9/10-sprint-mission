@@ -6,4 +6,7 @@ import com.sprint.mission.discodeit.dto.UserDto.UserRoleUpdateRequest;
 public interface AuthService {
 
   UserDto updateRole(UserRoleUpdateRequest request);
+
+  UserDto updateRoleInner(UserRoleUpdateRequest request);
+
 }
