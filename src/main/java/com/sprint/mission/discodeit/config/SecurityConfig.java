@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.function.Supplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
@@ -63,10 +64,13 @@ public class SecurityConfig {
             .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
         )
         .authorizeHttpRequests(auth -> auth
+            // 권한없이 가능한 예외URL
             .requestMatchers("/api/auth/csrf-token").permitAll()
-            .requestMatchers("/api/users").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
             .requestMatchers("/api/auth/login").permitAll()
             .requestMatchers("/api/auth/logout").permitAll()
+
+            // /api/**를 제외한 웹 리소스, Swagger, Actuator는 전부 허용
             .requestMatchers(nonApiMatcher).permitAll()
             .anyRequest().authenticated()
         )
