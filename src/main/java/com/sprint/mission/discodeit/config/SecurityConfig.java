@@ -1,8 +1,8 @@
 package com.sprint.mission.discodeit.config;
 
 import com.sprint.mission.discodeit.auth.DiscodeitUserDetailsService;
+import com.sprint.mission.discodeit.auth.JwtLoginSuccessHandler;
 import com.sprint.mission.discodeit.auth.LoginFailureHandler;
-import com.sprint.mission.discodeit.auth.LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.function.Supplier;
@@ -16,6 +16,7 @@ import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -42,7 +43,7 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain filterChain(
       HttpSecurity http,
-      LoginSuccessHandler loginSuccessHandler,
+      JwtLoginSuccessHandler jwtLoginSuccessHandler,
       LoginFailureHandler loginFailureHandler,
       DiscodeitUserDetailsService discodeitUserDetailsService) throws Exception {
     RequestMatcher apiMatcher = PathPatternRequestMatcher.withDefaults().matcher("/api/**");
@@ -51,7 +52,7 @@ public class SecurityConfig {
     SecurityFilterChain chain = http
         .formLogin(login -> login
             .loginProcessingUrl("/api/auth/login")
-            .successHandler(loginSuccessHandler)
+            .successHandler(jwtLoginSuccessHandler)
             .failureHandler(loginFailureHandler)
         )
         .logout(logout -> logout
@@ -79,19 +80,20 @@ public class SecurityConfig {
             .accessDeniedHandler(new HttpStatusAccessDeniedHandler(HttpStatus.FORBIDDEN))
         )
         .sessionManagement(session -> session
-            .sessionConcurrency(concurrency -> concurrency
-                .maximumSessions(1)
-                .maxSessionsPreventsLogin(false)    // 기존 세션 밀어내기
-                .sessionRegistry(getSessionRegistry())
-            )
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//            .sessionConcurrency(concurrency -> concurrency
+//                .maximumSessions(1)
+//                .maxSessionsPreventsLogin(false)    // 기존 세션 밀어내기
+//                .sessionRegistry(getSessionRegistry())
+//            )
         )
-        .rememberMe(me -> me
-            .rememberMeParameter("remember-me")               // 로그인 폼 파라미터명
-            .rememberMeCookieName("discodeit-remember-me")  // 쿠키 이름
-            .tokenValiditySeconds(7 * 24 * 60 * 60)             // 7일 유지
-            .key("my-remember-key")                                         // 쿠키 생성 시 서명 키
-            .userDetailsService(discodeitUserDetailsService)
-        )
+//        .rememberMe(me -> me
+//            .rememberMeParameter("remember-me")               // 로그인 폼 파라미터명
+//            .rememberMeCookieName("discodeit-remember-me")  // 쿠키 이름
+//            .tokenValiditySeconds(7 * 24 * 60 * 60)             // 7일 유지
+//            .key("my-remember-key")                                         // 쿠키 생성 시 서명 키
+//            .userDetailsService(discodeitUserDetailsService)
+//        )
 
         .build();
 
