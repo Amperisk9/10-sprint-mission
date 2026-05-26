@@ -1,6 +1,8 @@
 package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.auth.DiscodeitUserDetails;
+import com.sprint.mission.discodeit.auth.dto.JwtInformation;
+import com.sprint.mission.discodeit.auth.jwt.JwtTokenProvider;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.UserDto.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.entity.User;
@@ -8,6 +10,7 @@ import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.AuthService;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,6 +28,7 @@ public class BasicAuthService implements AuthService {
   private final UserRepository userRepository;
   private final UserMapper userMapper;
   private final SessionRegistry sessionRegistry;
+  private final JwtTokenProvider jwtTokenProvider;
 
   @PreAuthorize("hasRole('ADMIN')")
   @Transactional
@@ -49,5 +53,26 @@ public class BasicAuthService implements AuthService {
 
     log.info("유저 role 변경 성공 - userId={}, newRole={}", request.userId(), request.newRole());
     return userDto;
+  }
+
+  @Transactional
+  public JwtInformation updateRefreshToken(String previousRefreshToken) {
+    log.debug("refresh token 갱신 요청");
+    // getClaim내부에 validate 진행
+    Map<String, Object> claims = jwtTokenProvider.getClaims(previousRefreshToken);
+
+    // user
+    String username = getUsernameFromClaims(claims);
+    User findUser = userRepository.findByUsername(username)
+        .orElseThrow(() -> new UserNotFoundException());
+
+    String accessToken = jwtTokenProvider.generateAccessToken(claims, username);
+    String refreshToken = jwtTokenProvider.generateRefreshToken(username);
+
+    return new JwtInformation(userMapper.toDto(findUser), accessToken, refreshToken);
+  }
+
+  private String getUsernameFromClaims(Map<String, Object> claims) {
+    return claims.get("sub").toString();
   }
 }

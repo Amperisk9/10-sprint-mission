@@ -17,6 +17,7 @@ import java.util.Map;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -85,9 +86,35 @@ public class JwtTokenProvider {
         throw new RuntimeException("JWT 검증 실패");
       }
 
-      return signedJWT.getJWTClaimsSet().getClaims();
+      JWTClaimsSet claimsSet = signedJWT.getJWTClaimsSet();
+      if (claimsSet.getExpirationTime() != null &&
+          claimsSet.getExpirationTime().before(new Date())) {
+        throw new RuntimeException("만료된 토큰");
+      }
+
+      return claimsSet.getClaims();
     } catch (ParseException | JOSEException e) {
       throw new RuntimeException("잘못된 형식의 토큰", e);
     }
+  }
+
+  public ResponseCookie generateRefreshTokenCookie(String refreshToken) {
+    return ResponseCookie.from("REFRESH_TOKEN", refreshToken)
+        .path("/")
+        .httpOnly(true)
+        .secure(true)
+        .sameSite("Lax")
+        .maxAge(getRefreshTokenExpirationMinutes() * 60)
+        .build();
+  }
+
+  public ResponseCookie generateRefreshTokenCookieExpiration() {
+    return ResponseCookie.from("REFRESH_TOKEN")
+        .path("/")
+        .httpOnly(true)
+        .secure(true)
+        .sameSite("Lax")
+        .maxAge(0)
+        .build();
   }
 }

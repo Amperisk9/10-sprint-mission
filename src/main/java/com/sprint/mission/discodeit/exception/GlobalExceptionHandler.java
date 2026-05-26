@@ -66,6 +66,7 @@ public class GlobalExceptionHandler {
       case "UserNotFoundException", "UserStatusNotFoundException", "ChannelNotFoundException",
            "ReadStatusNotFoundException", "MessageNotFoundException",
            "BinaryContentNotFoundException" -> 404;
+      case "InvalidTokenException" -> 401;
       default -> 400;
     };
     log.warn("{}", e.getMessage(), e);

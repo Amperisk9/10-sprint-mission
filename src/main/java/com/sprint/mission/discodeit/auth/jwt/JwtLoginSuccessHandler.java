@@ -1,16 +1,17 @@
-package com.sprint.mission.discodeit.auth;
+package com.sprint.mission.discodeit.auth.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sprint.mission.discodeit.auth.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.auth.dto.JwtDto;
-import com.sprint.mission.discodeit.auth.jwt.JwtTokenProvider;
 import com.sprint.mission.discodeit.exception.ErrorResponse;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -32,16 +33,12 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
     final Object object;  // 값 무조건 넣었는지 컴파일러 체크
     if (authentication.getPrincipal() instanceof DiscodeitUserDetails userDetails) {
       response.setStatus(HttpServletResponse.SC_OK);
-      Map<String, Object> claims = Map.of("roles", userDetails.getAuthorities());
-      String accessToken = jwtTokenProvider.generateAccessToken(claims, userDetails.getUsername());
+      String accessToken = jwtTokenProvider.generateAccessToken(Map.of(),
+          userDetails.getUsername());
       String refreshToken = jwtTokenProvider.generateRefreshToken(userDetails.getUsername());
 
-      Cookie cookie = new Cookie("REFRESH_TOKEN", refreshToken);
-      cookie.setPath("/");
-      cookie.setHttpOnly(true);
-      cookie.setSecure(true);
-      cookie.setMaxAge((int) jwtTokenProvider.getRefreshTokenExpirationMinutes() * 60);
-      response.addCookie(cookie);
+      ResponseCookie cookie = jwtTokenProvider.generateRefreshTokenCookie(refreshToken);
+      response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
       object = new JwtDto(userDetails.getUserDto(), accessToken);
     } else {

@@ -1,8 +1,9 @@
 package com.sprint.mission.discodeit.config;
 
-import com.sprint.mission.discodeit.auth.DiscodeitUserDetailsService;
-import com.sprint.mission.discodeit.auth.JwtLoginSuccessHandler;
 import com.sprint.mission.discodeit.auth.LoginFailureHandler;
+import com.sprint.mission.discodeit.auth.filter.JwtAuthenticationFilter;
+import com.sprint.mission.discodeit.auth.jwt.JwtLoginSuccessHandler;
+import com.sprint.mission.discodeit.auth.jwt.JwtLogoutHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.function.Supplier;
@@ -24,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.HttpStatusAccessDeniedHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfToken;
@@ -45,7 +47,8 @@ public class SecurityConfig {
       HttpSecurity http,
       JwtLoginSuccessHandler jwtLoginSuccessHandler,
       LoginFailureHandler loginFailureHandler,
-      DiscodeitUserDetailsService discodeitUserDetailsService) throws Exception {
+      JwtLogoutHandler jwtLogoutHandler,
+      JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
     RequestMatcher apiMatcher = PathPatternRequestMatcher.withDefaults().matcher("/api/**");
     RequestMatcher nonApiMatcher = new NegatedRequestMatcher(apiMatcher);
 
@@ -57,6 +60,7 @@ public class SecurityConfig {
         )
         .logout(logout -> logout
             .logoutUrl("/api/auth/logout")
+            .addLogoutHandler(jwtLogoutHandler)
             .logoutSuccessHandler(
                 new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
         )
@@ -70,6 +74,7 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
             .requestMatchers("/api/auth/login").permitAll()
             .requestMatchers("/api/auth/logout").permitAll()
+            .requestMatchers("/api/auth/refresh").permitAll()
 
             // /api/**를 제외한 웹 리소스, Swagger, Actuator는 전부 허용
             .requestMatchers(nonApiMatcher).permitAll()
@@ -80,21 +85,10 @@ public class SecurityConfig {
             .accessDeniedHandler(new HttpStatusAccessDeniedHandler(HttpStatus.FORBIDDEN))
         )
         .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//            .sessionConcurrency(concurrency -> concurrency
-//                .maximumSessions(1)
-//                .maxSessionsPreventsLogin(false)    // 기존 세션 밀어내기
-//                .sessionRegistry(getSessionRegistry())
-//            )
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         )
-//        .rememberMe(me -> me
-//            .rememberMeParameter("remember-me")               // 로그인 폼 파라미터명
-//            .rememberMeCookieName("discodeit-remember-me")  // 쿠키 이름
-//            .tokenValiditySeconds(7 * 24 * 60 * 60)             // 7일 유지
-//            .key("my-remember-key")                                         // 쿠키 생성 시 서명 키
-//            .userDetailsService(discodeitUserDetailsService)
-//        )
-
+        // 기존 UsernamePassword 필터 앞에 토큰 인증 필터 추가
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .build();
 
     chain.getFilters().forEach(filter -> System.out.println(filter.getClass().getName()));
