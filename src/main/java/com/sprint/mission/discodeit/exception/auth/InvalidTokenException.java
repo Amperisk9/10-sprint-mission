@@ -4,7 +4,7 @@ import com.sprint.mission.discodeit.exception.ErrorCode;
 
 public class InvalidTokenException extends AuthException {
 
-  public InvalidTokenException(ErrorCode errorCode) {
+  public InvalidTokenException() {
     super(ErrorCode.INVALID_TOKEN);
   }
 }

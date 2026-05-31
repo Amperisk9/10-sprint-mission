@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.controller;
 import com.sprint.mission.discodeit.auth.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.auth.dto.JwtDto;
 import com.sprint.mission.discodeit.auth.dto.JwtInformation;
+import com.sprint.mission.discodeit.auth.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.auth.jwt.JwtTokenProvider;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.UserDto.UserRoleUpdateRequest;
@@ -34,6 +35,7 @@ public class AuthController {
 
   private final AuthService authService;
   private final JwtTokenProvider jwtTokenProvider;
+  private final JwtRegistry jwtRegistry;
 
   @GetMapping("/csrf-token")
   public ResponseEntity<Void> getCsrfToken(CsrfToken csrfToken) {

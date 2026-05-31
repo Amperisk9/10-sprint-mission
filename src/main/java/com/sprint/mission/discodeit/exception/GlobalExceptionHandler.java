@@ -69,7 +69,7 @@ public class GlobalExceptionHandler {
       case "InvalidTokenException" -> 401;
       default -> 400;
     };
-    log.warn("{}", e.getMessage(), e);
+    log.warn("{}", e.getErrorCode().getMessage(), e);
 
     ErrorResponse errorResponse = ErrorResponse.of(status, e);
     return ResponseEntity.status(errorResponse.getStatus()).body(errorResponse);

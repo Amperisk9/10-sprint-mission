@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.auth.filter;
 
+import com.sprint.mission.discodeit.auth.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.auth.jwt.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,6 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private final JwtTokenProvider jwtTokenProvider;
   private final UserDetailsService userDetailsService;
+  private final JwtRegistry jwtRegistry;
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -30,6 +32,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     String token = getToken(request);
     if (token != null) {
       try {
+        boolean validate = jwtTokenProvider.validateToken(token);
+        boolean access = jwtRegistry.hasActiveJwtInformationByAccessToken(token);
+        log.debug("validate: {}, access:{}", validate, access);
+
+        if (!jwtTokenProvider.validateToken(token) ||
+            !jwtRegistry.hasActiveJwtInformationByAccessToken(token)) {
+          log.debug("토큰 검증 실패");
+          throw new RuntimeException();
+        }
+
         String username = jwtTokenProvider.getClaims(token).get("sub").toString();
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 

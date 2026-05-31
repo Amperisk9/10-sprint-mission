@@ -2,8 +2,11 @@ package com.sprint.mission.discodeit.config;
 
 import com.sprint.mission.discodeit.auth.LoginFailureHandler;
 import com.sprint.mission.discodeit.auth.filter.JwtAuthenticationFilter;
+import com.sprint.mission.discodeit.auth.jwt.InMemoryJwtRegistry;
 import com.sprint.mission.discodeit.auth.jwt.JwtLoginSuccessHandler;
 import com.sprint.mission.discodeit.auth.jwt.JwtLogoutHandler;
+import com.sprint.mission.discodeit.auth.jwt.JwtRegistry;
+import com.sprint.mission.discodeit.auth.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.function.Supplier;
@@ -164,5 +167,10 @@ public class SecurityConfig {
   @Bean
   public HttpSessionEventPublisher httpSessionEventPublisher() {
     return new HttpSessionEventPublisher();
+  }
+
+  @Bean
+  public JwtRegistry getRegistry(JwtTokenProvider jwtTokenProvider) {
+    return new InMemoryJwtRegistry(jwtTokenProvider, 1);
   }
 }
