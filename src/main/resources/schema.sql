@@ -61,6 +61,7 @@ CREATE TABLE read_statuses(
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     channel_id UUID NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
     last_read_at TIMESTAMPTZ NOT NULL,
+    notification_enabled BOOLEAN NOT NULL,
     UNIQUE (user_id, channel_id)
 );
 
