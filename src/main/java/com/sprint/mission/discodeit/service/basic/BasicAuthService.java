@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.auth.jwt.JwtTokenProvider;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.UserDto.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.exception.auth.InvalidTokenException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
 import com.sprint.mission.discodeit.mapper.UserMapper;
@@ -15,6 +16,7 @@ import com.sprint.mission.discodeit.service.AuthService;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -32,6 +34,7 @@ public class BasicAuthService implements AuthService {
   private final UserMapper userMapper;
   private final JwtRegistry jwtRegistry;
   private final JwtTokenProvider jwtTokenProvider;
+  private final ApplicationEventPublisher eventPublisher;
 
   @PreAuthorize("hasRole('ADMIN')")
   @Transactional
@@ -48,6 +51,8 @@ public class BasicAuthService implements AuthService {
 
     findUser.updateRole(request.newRole());
     UserDto userDto = userMapper.toDto(findUser);
+    eventPublisher.publishEvent(
+        new RoleUpdatedEvent(request.userId(), findUser.getRole(), request.newRole()));
 
     // 세션만료
     jwtRegistry.invalidateJwtInformationByUserId(userDto.id());

@@ -7,6 +7,7 @@ import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
+import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.message.MessageNotFoundException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
@@ -70,8 +71,7 @@ public class BasicMessageService implements MessageService {
     }
 
     messageRepository.save(msg);
-    log.debug("[Service] 메세지 저장 완료: id={}", msg.getId());
-
+    eventPublisher.publishEvent(new MessageCreatedEvent(msg));
     log.info("[Service] 메세지 생성 성공: id={}", msg.getId());
     return toResponse(msg);
   }

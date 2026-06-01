@@ -69,3 +69,11 @@ CREATE TABLE message_attachments(
     message_id UUID NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
     attachment_id UUID NOT NULL REFERENCES binary_contents(id) ON DELETE CASCADE
 );
+
+CREATE TABLE notifications(
+    id UUID PRIMARY KEY,
+    created_at TIMESTAMPTZ NOT NULL,
+    receiver_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(100) NOT NULL,
+    content VARCHAR(500)
+);

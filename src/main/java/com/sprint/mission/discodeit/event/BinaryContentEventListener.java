@@ -13,7 +13,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class BinaryContentEventHandler {
+public class BinaryContentEventListener {
 
   private final BinaryContentService binaryContentService;
   private final BinaryContentStorage binaryContentStorage;
