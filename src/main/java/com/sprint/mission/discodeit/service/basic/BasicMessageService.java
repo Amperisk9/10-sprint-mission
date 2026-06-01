@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.entity.BinaryContent;
 import com.sprint.mission.discodeit.entity.Channel;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.User;
+import com.sprint.mission.discodeit.event.BinaryContentCreatedEvent;
 import com.sprint.mission.discodeit.exception.channel.ChannelNotFoundException;
 import com.sprint.mission.discodeit.exception.message.MessageNotFoundException;
 import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
@@ -24,6 +25,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -44,6 +46,7 @@ public class BasicMessageService implements MessageService {
   private final BinaryContentStorage binaryContentStorage;
   private final PageResponseMapper pageMapper;
   private final MessageMapper messageMapper;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
   @Override
@@ -60,9 +63,8 @@ public class BasicMessageService implements MessageService {
             attachment.getOriginalFilename(), attachment.getSize(), attachment.getContentType());
         binaryContentRepository.save(content);
         log.debug("[Service] 첨부파일 저장 완료: contentId={}", content.getId());
-        binaryContentStorage.put(content.getId(), attachment.getBytes());
-        log.debug("[Service] 첨부파일 물리적 저장 완료: contentId={}, contentType={}",
-            content.getId(), content.getContentType());
+        eventPublisher.publishEvent(
+            new BinaryContentCreatedEvent(content.getId(), attachment.getBytes()));
         msg.addAttachment(content);
       }
     }
