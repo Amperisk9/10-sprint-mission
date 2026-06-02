@@ -32,10 +32,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     String token = getToken(request);
     if (token != null) {
       try {
-        boolean validate = jwtTokenProvider.validateToken(token);
-        boolean access = jwtRegistry.hasActiveJwtInformationByAccessToken(token);
-        log.debug("validate: {}, access:{}", validate, access);
-
         if (!jwtTokenProvider.validateToken(token) ||
             !jwtRegistry.hasActiveJwtInformationByAccessToken(token)) {
           log.debug("토큰 검증 실패");

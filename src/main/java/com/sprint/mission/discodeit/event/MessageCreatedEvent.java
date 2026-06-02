@@ -1,7 +1,8 @@
 package com.sprint.mission.discodeit.event;
 
 import com.sprint.mission.discodeit.entity.Message;
+import java.util.UUID;
 
-public record MessageCreatedEvent(Message message) {
+public record MessageCreatedEvent(UUID chanelId, Message message) {
 
 }

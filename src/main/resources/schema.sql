@@ -75,5 +75,5 @@ CREATE TABLE notifications(
     created_at TIMESTAMPTZ NOT NULL,
     receiver_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(100) NOT NULL,
-    content VARCHAR(500)
+    content VARCHAR(500) NOT NULL
 );

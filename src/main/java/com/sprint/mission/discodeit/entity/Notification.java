@@ -7,6 +7,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -17,11 +18,23 @@ import lombok.NoArgsConstructor;
 public class Notification extends BaseEntity {
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "receiver_id")
+  @JoinColumn(name = "receiver_id", nullable = false)
   private User receiver;
+
   @Column(nullable = false)
   private String title;
-  @Column(nullable = true)
+
+  @Column(nullable = false)
   private String content;
 
+  public Notification(User receiver, String title, String content) {
+    super();
+    this.receiver = receiver;
+    this.title = title;
+    this.content = content;
+  }
+
+  public boolean isOwnedBy(UUID userId) {
+    return this.receiver.getId().equals(userId);
+  }
 }

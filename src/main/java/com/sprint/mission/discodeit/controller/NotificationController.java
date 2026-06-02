@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.controller;
 
+import com.sprint.mission.discodeit.auth.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.dto.NotificationDto;
 import com.sprint.mission.discodeit.exception.ErrorResponse;
 import com.sprint.mission.discodeit.service.NotificationService;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,9 +40,10 @@ public class NotificationController {
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
   @GetMapping
-  public ResponseEntity<List<NotificationDto>> getNotifications() {
+  public ResponseEntity<List<NotificationDto>> getNotifications(
+      @AuthenticationPrincipal DiscodeitUserDetails userDetails) {
     return ResponseEntity.status(HttpStatus.OK)
-        .body(notificationService.getNotifications());
+        .body(notificationService.getNotifications(userDetails.getUserDto().id()));
   }
 
   @Operation(summary = "Notification 삭제")
@@ -55,8 +58,10 @@ public class NotificationController {
   })
   @DeleteMapping("/{notification-id}")
   public ResponseEntity<Void> deleteNotification(
-      @PathVariable("notification-id") UUID notificationId) {
-    notificationService.deleteNotification(notificationId);
+      @PathVariable("notification-id") UUID notificationId,
+      @AuthenticationPrincipal DiscodeitUserDetails userDetails) {
+    UUID userId = userDetails.getUserDto().id();
+    notificationService.deleteNotification(notificationId, userId);
     return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
   }
 }
