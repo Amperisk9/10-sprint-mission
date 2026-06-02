@@ -4,6 +4,7 @@ import com.sprint.mission.discodeit.dto.NotificationDto;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.Notification;
 import com.sprint.mission.discodeit.entity.ReadStatus;
+import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.exception.notification.NotificationAccessDeniedException;
 import com.sprint.mission.discodeit.exception.notification.NotificationNotFoundException;
 import com.sprint.mission.discodeit.mapper.NotificationMapper;
@@ -30,7 +31,7 @@ public class BasicNotificationService implements NotificationService {
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   @Override
-  public void registerNotification(UUID channelId, Message message) {
+  public void registerMessageCreatedNotification(UUID channelId, Message message) {
     List<ReadStatus> readStatusesExceptAuthor = readStatusRepository
         .findAllByChannelId(channelId).stream()
         .filter(ReadStatus::isNotificationEnabled)
@@ -48,8 +49,20 @@ public class BasicNotificationService implements NotificationService {
             message.getContent()))
         .toList();
     notificationRepository.saveAll(notifications);
-    log.info("notification 생성: messageId={}, notificationSize={}",
+    log.info("notification [MessageCrated] 생성: messageId={}, notificationSize={}",
         message.getId(), notifications.size());
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  @Override
+  public void registerRoleUpdatedNotification(RoleUpdatedEvent event) {
+    Notification notification = new Notification(
+        event.user(),
+        "권한이 변경되었습니다",
+        event.oldRole() + " -> " + event.newRole());
+
+    notificationRepository.save(notification);
+    log.info("notification [RoleUpdated] 생성");
   }
 
   @Override

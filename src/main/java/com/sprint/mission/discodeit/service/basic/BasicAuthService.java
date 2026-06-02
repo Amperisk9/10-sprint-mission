@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.auth.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.auth.jwt.JwtTokenProvider;
 import com.sprint.mission.discodeit.dto.UserDto;
 import com.sprint.mission.discodeit.dto.UserDto.UserRoleUpdateRequest;
+import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.exception.auth.InvalidTokenException;
@@ -48,11 +49,12 @@ public class BasicAuthService implements AuthService {
 
     User findUser = userRepository.findById(request.userId())
         .orElseThrow(() -> new UserNotFoundException());
+    Role oldRole = findUser.getRole();
 
     findUser.updateRole(request.newRole());
     UserDto userDto = userMapper.toDto(findUser);
     eventPublisher.publishEvent(
-        new RoleUpdatedEvent(request.userId(), findUser.getRole(), request.newRole()));
+        new RoleUpdatedEvent(findUser, oldRole, request.newRole()));
 
     // 세션만료
     jwtRegistry.invalidateJwtInformationByUserId(userDto.id());

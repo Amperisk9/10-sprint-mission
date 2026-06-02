@@ -14,12 +14,11 @@ public class NotificationRequiredEventListener {
 
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void on(MessageCreatedEvent event) {
-    notificationService.registerNotification(event.chanelId(), event.message());
+    notificationService.registerMessageCreatedNotification(event.chanelId(), event.message());
   }
 
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void on(RoleUpdatedEvent event) {
-
+    notificationService.registerRoleUpdatedNotification(event);
   }
-
 }
