@@ -4,12 +4,15 @@ import com.sprint.mission.discodeit.dto.NotificationDto;
 import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.Notification;
 import com.sprint.mission.discodeit.entity.ReadStatus;
+import com.sprint.mission.discodeit.entity.Role;
+import com.sprint.mission.discodeit.event.BinaryContentUploadFailedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
 import com.sprint.mission.discodeit.exception.notification.NotificationAccessDeniedException;
 import com.sprint.mission.discodeit.exception.notification.NotificationNotFoundException;
 import com.sprint.mission.discodeit.mapper.NotificationMapper;
 import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
+import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.NotificationService;
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BasicNotificationService implements NotificationService {
 
+  private final UserRepository userRepository;
   private final ReadStatusRepository readStatusRepository;
   private final NotificationRepository notificationRepository;
   private final NotificationMapper notificationMapper;
@@ -63,6 +67,17 @@ public class BasicNotificationService implements NotificationService {
 
     notificationRepository.save(notification);
     log.info("notification [RoleUpdated] 생성");
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  @Override
+  public void registerBinaryContentUploadFailNotification(BinaryContentUploadFailedEvent event) {
+    List<Notification> notifications = userRepository.findAllByRole(Role.ADMIN).stream()
+        .map(admin -> new Notification(admin, "S3 파일 업로드 실패", event.error()))
+        .toList();
+    notificationRepository.saveAll(notifications);
+    log.info("notification [BinaryContentUploadFailedEvent] 생성: notificationSize={}",
+        notifications.size());
   }
 
   @Override

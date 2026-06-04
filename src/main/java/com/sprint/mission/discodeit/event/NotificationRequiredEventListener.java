@@ -26,4 +26,10 @@ public class NotificationRequiredEventListener {
   public void on(RoleUpdatedEvent event) {
     notificationService.registerRoleUpdatedNotification(event);
   }
+
+  @Async("asyncExecutor")
+  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  public void on(BinaryContentUploadFailedEvent event) {
+    notificationService.registerBinaryContentUploadFailNotification(event);
+  }
 }

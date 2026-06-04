@@ -32,6 +32,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'            // Actuator
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'            // JPA
     implementation 'org.springframework.boot:spring-boot-starter-security'            // Security
+    implementation 'org.springframework.retry:spring-retry'                           // retry
     implementation 'org.postgresql:postgresql:42.7.3'                                 // Postgre SQL
     runtimeOnly 'com.h2database:h2'                                                   // h2
 
