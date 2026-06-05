@@ -2,12 +2,13 @@ package com.sprint.mission.discodeit.service.basic;
 
 import com.sprint.mission.discodeit.config.CacheConfig.CacheNames;
 import com.sprint.mission.discodeit.dto.NotificationDto;
-import com.sprint.mission.discodeit.entity.Message;
 import com.sprint.mission.discodeit.entity.Notification;
 import com.sprint.mission.discodeit.entity.ReadStatus;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.event.BinaryContentUploadFailedEvent;
+import com.sprint.mission.discodeit.event.MessageCreatedEvent;
 import com.sprint.mission.discodeit.event.RoleUpdatedEvent;
+import com.sprint.mission.discodeit.event.payload.MessageCreatedPayload;
 import com.sprint.mission.discodeit.exception.notification.NotificationAccessDeniedException;
 import com.sprint.mission.discodeit.exception.notification.NotificationNotFoundException;
 import com.sprint.mission.discodeit.mapper.NotificationMapper;
@@ -41,11 +42,11 @@ public class BasicNotificationService implements NotificationService {
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   @Override
-  public void registerMessageCreatedNotification(UUID channelId, Message message) {
+  public void registerMessageCreatedNotification(MessageCreatedEvent event) {
     List<ReadStatus> readStatusesExceptAuthor = readStatusRepository
-        .findAllByChannelId(channelId).stream()
+        .findAllByChannelId(event.messageCreatedPayload().channelId()).stream()
         .filter(ReadStatus::isNotificationEnabled)
-        .filter(rs -> !rs.getUser().getId().equals(message.getAuthor().getId()))
+        .filter(rs -> !rs.getUser().getId().equals(event.messageCreatedPayload().authorId()))
         .toList();
 
     if (readStatusesExceptAuthor.isEmpty()) {
@@ -54,25 +55,25 @@ public class BasicNotificationService implements NotificationService {
 
     List<Notification> notifications = readStatusesExceptAuthor.stream()
         .map(rs -> new Notification(
-            rs.getUser(),
-            getMessageEventTitle(message),
-            message.getContent()))
+            rs.getUser().getId(),
+            getMessageEventTitle(event.messageCreatedPayload()),
+            event.messageCreatedPayload().content()))
         .toList();
     notificationRepository.saveAll(notifications);
     log.info("notification [MessageCrated] 생성: messageId={}, notificationSize={}",
-        message.getId(), notifications.size());
+        event.messageCreatedPayload().messageId(), notifications.size());
 
     // 캐시삭제
     Optional.ofNullable(cacheManager.getCache(CacheNames.NOTIFICATIONS_BY_USER))
-        .ifPresent(cache -> notifications.forEach(n -> cache.evict(n.getReceiver().getId())));
+        .ifPresent(cache -> notifications.forEach(n -> cache.evict(n.getReceiverId())));
   }
 
-  @CacheEvict(cacheNames = CacheNames.NOTIFICATIONS_BY_USER, key = "#event.user().id")
+  @CacheEvict(cacheNames = CacheNames.NOTIFICATIONS_BY_USER, key = "#event.userId()")
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   @Override
   public void registerRoleUpdatedNotification(RoleUpdatedEvent event) {
     Notification notification = new Notification(
-        event.user(),
+        event.userId(),
         "권한이 변경되었습니다",
         event.oldRole() + " -> " + event.newRole());
 
@@ -84,7 +85,7 @@ public class BasicNotificationService implements NotificationService {
   @Override
   public void registerBinaryContentUploadFailNotification(BinaryContentUploadFailedEvent event) {
     List<Notification> notifications = userRepository.findAllByRole(Role.ADMIN).stream()
-        .map(admin -> new Notification(admin, "S3 파일 업로드 실패", event.error()))
+        .map(admin -> new Notification(admin.getId(), "S3 파일 업로드 실패", event.error()))
         .toList();
     notificationRepository.saveAll(notifications);
     log.info("notification [BinaryContentUploadFailedEvent] 생성: notificationSize={}",
@@ -92,7 +93,7 @@ public class BasicNotificationService implements NotificationService {
 
     // 캐시삭제
     Optional.ofNullable(cacheManager.getCache(CacheNames.NOTIFICATIONS_BY_USER))
-        .ifPresent(cache -> notifications.forEach(n -> cache.evict(n.getReceiver().getId())));
+        .ifPresent(cache -> notifications.forEach(n -> cache.evict(n.getReceiverId())));
   }
 
   @Cacheable(CacheNames.NOTIFICATIONS_BY_USER)
@@ -117,9 +118,9 @@ public class BasicNotificationService implements NotificationService {
     notificationRepository.delete(notification);
   }
 
-  private String getMessageEventTitle(Message message) {
-    String channelName = message.getChannel().getName() != null ?
-        message.getChannel().getName() : "개인채널";
-    return message.getAuthor().getUsername() + " (#" + channelName + ")";
+  private String getMessageEventTitle(MessageCreatedPayload payload) {
+    String channelName = payload.channelName() != null ?
+        payload.channelName() : "개인채널";
+    return payload.authorName() + " (#" + channelName + ")";
   }
 }

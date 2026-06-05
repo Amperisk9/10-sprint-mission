@@ -54,7 +54,7 @@ public class BasicAuthService implements AuthService {
     findUser.updateRole(request.newRole());
     UserDto userDto = userMapper.toDto(findUser);
     eventPublisher.publishEvent(
-        new RoleUpdatedEvent(findUser, oldRole, request.newRole()));
+        new RoleUpdatedEvent(findUser.getId(), oldRole, request.newRole()));
 
     // 세션만료
     jwtRegistry.invalidateJwtInformationByUserId(userDto.id());

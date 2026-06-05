@@ -51,7 +51,7 @@ public class MessageController {
       @ApiResponse(responseCode = "404", description = "Channel 또는 User를 찾을 수 없음",
           content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
   })
-  @Timed("message.create.async")
+  @Timed("messageDto.create.async")
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<MessageDto> createMessage(
       @Valid @RequestPart("messageCreateRequest") MessageDto.MessageCreateRequest messageReq,

@@ -23,7 +23,7 @@ public class NotificationRequiredTopicListener {
     log.debug("Event [MessageCreatedEvent]: start");
     MessageCreatedEvent event = objectMapper.readValue(kafkaEvent,
         MessageCreatedEvent.class);
-    notificationService.registerMessageCreatedNotification(event.chanelId(), event.message());
+    notificationService.registerMessageCreatedNotification(event);
     log.debug("Event [MessageCreatedEvent]: end");
   }
 

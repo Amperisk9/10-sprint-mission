@@ -21,7 +21,7 @@ public class NotificationRequiredEventListener {
   @Async("asyncExecutor")
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void on(MessageCreatedEvent event) {
-    notificationService.registerMessageCreatedNotification(event.chanelId(), event.message());
+    notificationService.registerMessageCreatedNotification(event);
   }
 
   @Async("asyncExecutor")
