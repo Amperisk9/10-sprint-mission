@@ -59,6 +59,8 @@ discodeit:
     key: ${JWT_SECRET_KEY}
     access-token-expiration-minutes: 10                 # 10분
     refresh-token-expiration-minutes: '#{60 * 24 * 7}'  # 일주일
+  kafka:
+    enabled: true
 
 logging.level:
   root: info

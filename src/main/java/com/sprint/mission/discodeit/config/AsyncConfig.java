@@ -28,4 +28,19 @@ public class AsyncConfig {
     executor.initialize();
     return executor;
   }
+
+  @Bean(name = "eventTaskExecutor")
+  public TaskExecutor eventTaskExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(3);        // 최소 스레드 개수
+    executor.setMaxPoolSize(6);         // 최대 스레드 개수
+    executor.setQueueCapacity(100);     // 대기 큐 용량 100
+    executor.setKeepAliveSeconds(10);   // 유휴 스레드 10초
+    executor.setThreadNamePrefix("EventTaskExecutor-");
+    executor.setTaskDecorator(new CompositeDecorator(List.of(
+        new MdcTaskDecorator(), new SecurityContextDecorator()
+    )));
+    executor.initialize();
+    return executor;
+  }
 }
