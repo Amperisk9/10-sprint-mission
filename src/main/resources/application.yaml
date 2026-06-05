@@ -23,6 +23,13 @@ spring:
         maximumSize=100,
         expireAfterAccess=600s,
         recordStats
+    type: redis
+    redis:
+      enable-statistics: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
 discodeit:
   repository:
