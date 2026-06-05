@@ -15,7 +15,14 @@ spring:
     multipart:
       max-file-size: 1MB
       max-request-size: 10MB
-#        format_sql: true
+  #        format_sql: true
+  cache:
+    cache-names: channelsByUser, notificationsByUser, userCache
+    caffeine:
+      spec: >
+        maximumSize=100,
+        expireAfterAccess=600s,
+        recordStats
 
 discodeit:
   repository:
@@ -47,7 +54,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, info, metrics, loggers
+        include: health, info, metrics, loggers, caches
   info.env.enabled: true
   observations:
     annotations:

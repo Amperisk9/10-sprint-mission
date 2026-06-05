@@ -1,11 +1,15 @@
 package com.sprint.mission.discodeit.auth.jwt;
 
+import com.sprint.mission.discodeit.config.CacheConfig.CacheNames;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
@@ -19,6 +23,7 @@ public class JwtLogoutHandler implements LogoutHandler {
 
   private final JwtTokenProvider jwtTokenProvider;
   private final JwtRegistry jwtRegistry;
+  private final CacheManager cacheManager;
 
   @Override
   public void logout(HttpServletRequest request, HttpServletResponse response,
@@ -35,5 +40,9 @@ public class JwtLogoutHandler implements LogoutHandler {
         });
 
     log.debug("로그아웃 성공");
+
+    // 캐시 삭제
+    Optional.ofNullable(cacheManager.getCache(CacheNames.USER_CACHE))
+        .ifPresent(Cache::clear);
   }
 }
