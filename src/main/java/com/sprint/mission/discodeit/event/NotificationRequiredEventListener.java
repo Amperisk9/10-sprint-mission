@@ -3,6 +3,7 @@ package com.sprint.mission.discodeit.event;
 import com.sprint.mission.discodeit.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -28,7 +29,7 @@ public class NotificationRequiredEventListener {
   }
 
   @Async("asyncExecutor")
-  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+  @EventListener
   public void on(BinaryContentUploadFailedEvent event) {
     notificationService.registerBinaryContentUploadFailNotification(event);
   }

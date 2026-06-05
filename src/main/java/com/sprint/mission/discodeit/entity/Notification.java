@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor
-@Table(name = "notification")
+@Table(name = "notifications")
 @Getter
 public class Notification extends BaseEntity {
 
@@ -21,10 +21,10 @@ public class Notification extends BaseEntity {
   @JoinColumn(name = "receiver_id", nullable = false)
   private User receiver;
 
-  @Column(nullable = false)
+  @Column(nullable = false, length = 100)
   private String title;
 
-  @Column(nullable = false)
+  @Column(nullable = false, columnDefinition = "TEXT")
   private String content;
 
   public Notification(User receiver, String title, String content) {
