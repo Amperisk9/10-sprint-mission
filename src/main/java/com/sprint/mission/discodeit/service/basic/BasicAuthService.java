@@ -40,11 +40,6 @@ public class BasicAuthService implements AuthService {
   @PreAuthorize("hasRole('ADMIN')")
   @Transactional
   public UserDto updateRole(UserRoleUpdateRequest request) {
-    return updateRoleInner(request);
-  }
-
-  @Transactional
-  public UserDto updateRoleInner(UserRoleUpdateRequest request) {
     log.debug("유저 role 변경 요청 - userId={}, newRole={}", request.userId(), request.newRole());
 
     User findUser = userRepository.findById(request.userId())

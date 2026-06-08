@@ -42,6 +42,10 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
 discodeit:
+  admin:
+    id: ${ADMIN_ID}
+    pw: ${ADMIN_PW}
+    email: ${ADMIN_EMAIL}
   repository:
     type: file
     file-directory: .discodeit

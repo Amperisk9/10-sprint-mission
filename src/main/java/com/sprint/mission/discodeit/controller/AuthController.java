@@ -57,7 +57,7 @@ public class AuthController {
   @PutMapping("/role")
   public ResponseEntity<UserDto> changeRole(@RequestBody UserRoleUpdateRequest updateRequest) {
     log.debug("user 권한 변경 요청: userId={}, newRole={}",
-        updateRequest.newRole(), updateRequest.newRole());
+        updateRequest.userId(), updateRequest.newRole());
     UserDto userDto = authService.updateRole(updateRequest);
     log.info("user 권한 변경 성공: userId={}, newRole={}", userDto.id(), userDto.role());
     return ResponseEntity.status(HttpStatus.OK)

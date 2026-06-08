@@ -1,5 +1,6 @@
 package com.sprint.mission.discodeit.service.basic;
 
+import com.sprint.mission.discodeit.auth.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.dto.MessageDto;
 import com.sprint.mission.discodeit.dto.response.PageResponse;
 import com.sprint.mission.discodeit.entity.BinaryContent;
@@ -30,7 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authorization.AuthorizationDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -100,12 +102,12 @@ public class BasicMessageService implements MessageService {
     return pageMapper.fromData(messagesDto, nextCursor, hasNext);
   }
 
-  @PreAuthorize("@messageRepository.findById(#uuid).get().author.id == authentication.principal.userDto.id")
   @Transactional
   @Override
   public MessageDto updateMessage(UUID uuid, MessageDto.MessageUpdateRequest messageReq) {
     log.debug("[Service] 메세지 수정 시작: id={}", uuid);
     Message msg = getMessageOrThrow(uuid);
+    checkMessageOwner(msg);
 
     Optional.ofNullable(messageReq.newContent()).ifPresent(msg::updateMessage);
     messageRepository.save(msg);
@@ -115,12 +117,12 @@ public class BasicMessageService implements MessageService {
     return toResponse(msg);
   }
 
-  @PreAuthorize("@messageRepository.findById(#uuid).get().author.id == authentication.principal.userDto.id")
   @Transactional
   @Override
   public void deleteMessage(UUID uuid) throws IOException {
     log.debug("[Service] 메세지 삭제 시작: id={}", uuid);
     Message msg = getMessageOrThrow(uuid);
+    checkMessageOwner(msg);
 
     for (var attachment : msg.getAttachments()) {
       binaryContentStorage.delete(attachment.getId());
@@ -129,6 +131,15 @@ public class BasicMessageService implements MessageService {
 
     messageRepository.deleteById(uuid);
     log.info("[Service] 메세지 삭제 성공: id={}", uuid);
+  }
+
+  private void checkMessageOwner(Message msg) {
+    Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    UUID userId = ((DiscodeitUserDetails) principal).getUserDto().id();
+
+    if (msg.getAuthor().getId() != userId) {
+      throw new AuthorizationDeniedException("메세지에 권한이 없습니다");
+    }
   }
 
   private Message getMessageOrThrow(UUID messageId) {
