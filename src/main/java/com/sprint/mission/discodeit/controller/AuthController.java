@@ -1,6 +1,5 @@
 package com.sprint.mission.discodeit.controller;
 
-import com.sprint.mission.discodeit.auth.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.auth.dto.JwtDto;
 import com.sprint.mission.discodeit.auth.dto.JwtInformation;
 import com.sprint.mission.discodeit.auth.jwt.JwtRegistry;
@@ -16,7 +15,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,15 +41,6 @@ public class AuthController {
     log.debug("CSRF 토큰 요청: {}", tokenValue);
 
     return ResponseEntity.status(HttpStatus.NON_AUTHORITATIVE_INFORMATION).build();
-  }
-
-  @GetMapping("/me")
-  public ResponseEntity<UserDto> getMe(@AuthenticationPrincipal DiscodeitUserDetails userDetails) {
-    log.debug("내 정보 새로고침 요청: userid={}", userDetails.getUserDto().id());
-    UserDto userDto = userDetails.getUserDto();
-    log.info("내 정보 새로고침 성공: userId={}", userDto.id());
-    return ResponseEntity.status(HttpStatus.OK)
-        .body(userDto);
   }
 
   @PutMapping("/role")

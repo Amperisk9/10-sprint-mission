@@ -1,6 +1,7 @@
 package com.sprint.mission.discodeit.auth.jwt;
 
 import com.sprint.mission.discodeit.config.CacheConfig.CacheNames;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
@@ -31,18 +32,30 @@ public class JwtLogoutHandler implements LogoutHandler {
     ResponseCookie expirationCookie = jwtTokenProvider.generateRefreshTokenCookieExpiration();
     response.addHeader(HttpHeaders.SET_COOKIE, expirationCookie.toString());
 
-    Arrays.stream(request.getCookies())
-        .filter(cookie -> cookie.getName().equals(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME))
-        .findFirst()
-        .ifPresent(cookie -> {
-          UUID userId = UUID.fromString(jwtTokenProvider.getUserId(cookie.getValue()));
-          jwtRegistry.invalidateJwtInformationByUserId(userId);
-        });
+    // refresh token 추출
+    String requestCookie = extractRefreshToken(request);
+    if (requestCookie != null) {
+      UUID userId = UUID.fromString(jwtTokenProvider.getUserId(requestCookie));
+      jwtRegistry.invalidateJwtInformationByUserId(userId);
+    }
 
     log.debug("로그아웃 성공");
 
     // 캐시 삭제
     Optional.ofNullable(cacheManager.getCache(CacheNames.USER_CACHE))
         .ifPresent(Cache::clear);
+  }
+
+  private String extractRefreshToken(HttpServletRequest request) {
+    Cookie[] cookies = request.getCookies();
+    if (cookies == null) {
+      return null;
+    }
+
+    return Arrays.stream(cookies)
+        .filter(cookie -> cookie.getName().equals(JwtTokenProvider.REFRESH_TOKEN_COOKIE_NAME))
+        .map(Cookie::getValue)
+        .findFirst()
+        .orElse(null);
   }
 }

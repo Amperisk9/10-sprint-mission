@@ -45,7 +45,7 @@ public class BasicNotificationService implements NotificationService {
   public void registerMessageCreatedNotification(MessageCreatedEvent event) {
     List<ReadStatus> readStatusesExceptAuthor = readStatusRepository
         .findAllByChannelId(event.messageCreatedPayload().channelId()).stream()
-        .filter(ReadStatus::isNotificationEnabled)
+        .filter(ReadStatus::getNotificationEnabled)
         .filter(rs -> !rs.getUser().getId().equals(event.messageCreatedPayload().authorId()))
         .toList();
 

@@ -7,14 +7,15 @@ public record ReadStatusDto(
     UUID id,
     UUID userId,
     UUID channelId,
-    Instant lastReadAt
+    Instant lastReadAt,
+    Boolean notificationEnabled
 ) {
 
   public record ReadStatusCreateRequest(UUID userId, UUID channelId, Instant lastReadAt) {
 
   }
 
-  public record ReadStatusUpdateRequest(Instant newLastReadAt, boolean newNotificationEnabled) {
+  public record ReadStatusUpdateRequest(Instant newLastReadAt, Boolean newNotificationEnabled) {
 
   }
 }

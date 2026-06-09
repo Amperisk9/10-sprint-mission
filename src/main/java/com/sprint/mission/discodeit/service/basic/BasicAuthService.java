@@ -63,24 +63,21 @@ public class BasicAuthService implements AuthService {
   public JwtInformation updateRefreshToken(String previousRefreshToken) {
     log.debug("refresh token 갱신 요청");
 
-    if (!jwtTokenProvider.validateToken(previousRefreshToken) ||
-        !jwtRegistry.hasActiveJwtInformationByRefreshToken(previousRefreshToken)) {
+    Map<String, Object> claims = jwtTokenProvider.verifyAndGetClaims(previousRefreshToken);
+
+    if (!jwtRegistry.hasActiveJwtInformationByRefreshToken(previousRefreshToken)) {
       throw new InvalidTokenException();
     }
-
-    Map<String, Object> claims = jwtTokenProvider.getClaims(previousRefreshToken);
 
     // user
     String username = getUsernameFromClaims(claims);
     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-    User findUser = userRepository.findByUsername(username)
-        .orElseThrow(() -> new UserNotFoundException());
 
     DiscodeitUserDetails discodeitUserDetails = (DiscodeitUserDetails) userDetails;
     String accessToken = jwtTokenProvider.generateAccessToken(discodeitUserDetails);
     String refreshToken = jwtTokenProvider.generateRefreshToken(discodeitUserDetails);
-    JwtInformation newJwtInformation = new JwtInformation(userMapper.toDto(findUser), accessToken,
-        refreshToken);
+    JwtInformation newJwtInformation = new JwtInformation(discodeitUserDetails.getUserDto(),
+        accessToken, refreshToken);
 
     jwtRegistry.rotateJwtInformation(previousRefreshToken, newJwtInformation);
 
