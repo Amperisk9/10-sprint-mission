@@ -74,12 +74,14 @@ public class BasicMessageService implements MessageService {
     }
 
     messageRepository.save(msg);
-    eventPublisher.publishEvent(new MessageCreatedEvent(
-        new MessageCreatedPayload(channel.getId(), channel.getName(), msg.getId(), author.getId(),
-            author.getUsername(), msg.getContent())
-    ));
+
+    MessageDto messageDto = toResponse(msg);
     log.info("[Service] 메세지 생성 성공: id={}", msg.getId());
-    return toResponse(msg);
+
+    eventPublisher.publishEvent(new MessageCreatedEvent(
+        new MessageCreatedPayload(channel.getName(), messageDto)
+    ));
+    return messageDto;
   }
 
   @Override
@@ -137,7 +139,7 @@ public class BasicMessageService implements MessageService {
     Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     UUID userId = ((DiscodeitUserDetails) principal).getUserDto().id();
 
-    if (msg.getAuthor().getId() != userId) {
+    if (!msg.getAuthor().getId().equals(userId)) {
       throw new AuthorizationDeniedException("메세지에 권한이 없습니다");
     }
   }

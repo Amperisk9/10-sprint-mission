@@ -44,9 +44,10 @@ public class BasicNotificationService implements NotificationService {
   @Override
   public void registerMessageCreatedNotification(MessageCreatedEvent event) {
     List<ReadStatus> readStatusesExceptAuthor = readStatusRepository
-        .findAllByChannelId(event.messageCreatedPayload().channelId()).stream()
+        .findAllByChannelId(event.messageCreatedPayload().messageDto().channelId()).stream()
         .filter(ReadStatus::getNotificationEnabled)
-        .filter(rs -> !rs.getUser().getId().equals(event.messageCreatedPayload().authorId()))
+        .filter(rs -> !rs.getUser().getId()
+            .equals(event.messageCreatedPayload().messageDto().author().id()))
         .toList();
 
     if (readStatusesExceptAuthor.isEmpty()) {
@@ -57,11 +58,11 @@ public class BasicNotificationService implements NotificationService {
         .map(rs -> new Notification(
             rs.getUser().getId(),
             getMessageEventTitle(event.messageCreatedPayload()),
-            event.messageCreatedPayload().content()))
+            event.messageCreatedPayload().messageDto().content()))
         .toList();
     notificationRepository.saveAll(notifications);
     log.info("notification [MessageCrated] 생성: messageId={}, notificationSize={}",
-        event.messageCreatedPayload().messageId(), notifications.size());
+        event.messageCreatedPayload().messageDto().id(), notifications.size());
 
     // 캐시삭제
     Optional.ofNullable(cacheManager.getCache(CacheNames.NOTIFICATIONS_BY_USER))
@@ -121,6 +122,6 @@ public class BasicNotificationService implements NotificationService {
   private String getMessageEventTitle(MessageCreatedPayload payload) {
     String channelName = payload.channelName() != null ?
         payload.channelName() : "개인채널";
-    return payload.authorName() + " (#" + channelName + ")";
+    return payload.messageDto().author().username() + " (#" + channelName + ")";
   }
 }
