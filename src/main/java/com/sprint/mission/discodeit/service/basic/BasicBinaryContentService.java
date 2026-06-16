@@ -8,6 +8,8 @@ import com.sprint.mission.discodeit.exception.binarycontent.BinaryContentNotFoun
 import com.sprint.mission.discodeit.mapper.BinaryContentMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.service.BinaryContentService;
+import com.sprint.mission.discodeit.sse.SseMessageType;
+import com.sprint.mission.discodeit.sse.SseService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.io.IOException;
 import java.util.List;
@@ -30,6 +32,7 @@ public class BasicBinaryContentService implements BinaryContentService {
   private final BinaryContentStorage binaryContentStorage;
   private final BinaryContentMapper mapper;
   private final ApplicationEventPublisher eventPublisher;
+  private final SseService sseService;
 
   @Transactional
   @Override
@@ -88,6 +91,12 @@ public class BasicBinaryContentService implements BinaryContentService {
         .orElseThrow(() -> new BinaryContentNotFoundException());
     binaryContent.updateStatus(status);
 
-    return toResponse(binaryContent);
+    BinaryContentDto binaryContentDto = toResponse(binaryContent);
+
+    // UserId
+    sseService.broadcast(SseMessageType.BINARY_CONTENTS_UPDATED.getValue(),
+        binaryContentDto);
+
+    return binaryContentDto;
   }
 }

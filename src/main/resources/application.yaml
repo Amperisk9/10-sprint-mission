@@ -1,6 +1,9 @@
 spring:
   profiles:
     active: dev
+  mvc:
+    async:
+      request-timeout: 0
   application:
     name: discodeit
   jpa:

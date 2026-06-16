@@ -12,6 +12,8 @@ import com.sprint.mission.discodeit.mapper.UserMapper;
 import com.sprint.mission.discodeit.repository.BinaryContentRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.UserService;
+import com.sprint.mission.discodeit.sse.SseMessageType;
+import com.sprint.mission.discodeit.sse.SseService;
 import com.sprint.mission.discodeit.storage.BinaryContentStorage;
 import java.io.IOException;
 import java.util.List;
@@ -42,6 +44,7 @@ public class BasicUserService implements UserService {
   private final UserMapper mapper;
   private final PasswordEncoder passwordEncoder;
   private final ApplicationEventPublisher eventPublisher;
+  private final SseService sseService;
 
   @CacheEvict(cacheNames = CacheNames.USER_CACHE, allEntries = true)
   @Transactional
@@ -60,8 +63,12 @@ public class BasicUserService implements UserService {
     userRepository.save(user);
     log.debug("[Service] 유저 저장 완료: id={}", user.getId());
 
+    // 사용자 갱신
+    UserDto userDto = toDto(user);
+    sseService.send(List.of(user.getId()), SseMessageType.USERS_CREATED.getValue(), userDto);
+
     log.info("[Service] 유저 생성 성공: id={}", user.getId());
-    return toDto(user);
+    return userDto;
   }
 
   @Cacheable(CacheNames.USER_CACHE)
@@ -108,8 +115,12 @@ public class BasicUserService implements UserService {
     userRepository.save(user);
     log.debug("[Service] 수정된 유저 저장 완료: id={}", user.getId());
 
+    // 사용자 갱신
+    UserDto userDto = toDto(user);
+    sseService.send(List.of(user.getId()), SseMessageType.USERS_UPDATED.getValue(), userDto);
+
     log.info("[Service] 유저 수정 성공: id={}", user.getId());
-    return toDto(user);
+    return userDto;
   }
 
   @CacheEvict(cacheNames = CacheNames.USER_CACHE, allEntries = true)
@@ -118,9 +129,12 @@ public class BasicUserService implements UserService {
   @Override
   public void deleteUser(UUID uuid) {
     log.debug("[Service] 유저 삭제 시작: id={}", uuid);
-    if (!userRepository.existsById(uuid)) {
-      throw new UserNotFoundException();
-    }
+    User user = userRepository.findById(uuid)
+        .orElseThrow(() -> new UserNotFoundException());
+
+    // 사용자 갱신
+    UserDto userDto = toDto(user);
+    sseService.send(List.of(user.getId()), SseMessageType.USERS_DELETED.getValue(), userDto);
 
     userRepository.deleteById(uuid);
     log.info("[Service] 유저 삭제 성공: id={}", uuid);

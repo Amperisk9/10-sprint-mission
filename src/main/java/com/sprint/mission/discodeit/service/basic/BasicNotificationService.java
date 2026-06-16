@@ -16,6 +16,8 @@ import com.sprint.mission.discodeit.repository.NotificationRepository;
 import com.sprint.mission.discodeit.repository.ReadStatusRepository;
 import com.sprint.mission.discodeit.repository.UserRepository;
 import com.sprint.mission.discodeit.service.NotificationService;
+import com.sprint.mission.discodeit.sse.SseMessageType;
+import com.sprint.mission.discodeit.sse.SseService;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,6 +41,7 @@ public class BasicNotificationService implements NotificationService {
   private final NotificationRepository notificationRepository;
   private final NotificationMapper notificationMapper;
   private final CacheManager cacheManager;
+  private final SseService sseService;
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   @Override
@@ -63,6 +66,12 @@ public class BasicNotificationService implements NotificationService {
     notificationRepository.saveAll(notifications);
     log.info("notification [MessageCrated] 생성: messageId={}, notificationSize={}",
         event.messageCreatedPayload().messageDto().id(), notifications.size());
+
+    // 알림 이벤트 전송
+    notifications.stream()
+        .map(notificationMapper::toDto)
+        .forEach(dto -> sseService.send(List.of(dto.receiverId()),
+            SseMessageType.NOTIFICATION_CREATED.getValue(), dto));
 
     // 캐시삭제
     Optional.ofNullable(cacheManager.getCache(CacheNames.NOTIFICATIONS_BY_USER))
