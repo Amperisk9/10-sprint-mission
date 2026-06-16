@@ -1,7 +1,7 @@
 # Git 관련 파일 제외
 .git
 .github
-.gitignore
+../.gitignore
 
 # 빌드 결과물 (JAR만 복사할 것이므로 소스 내 빌드 폴더는 제외)
 build/
@@ -23,7 +23,7 @@ Dockerfile
 tmp/
 
 # 환경 변수 및 비밀 파일
-.env
+../.env
 *.pem
 
 # 프로젝트 관련
