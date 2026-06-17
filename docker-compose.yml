@@ -52,7 +52,7 @@ services:
     hostname: broker
     container_name: Broker
     ports:
-      - "9092:9092"
+      - "127.0.0.1:9092:9092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
@@ -81,7 +81,7 @@ services:
       - ./nginx/static:/usr/share/nginx/html:ro
     networks: [frontend_network]
     ports:
-      - "3000:80"
+      - "127.0.0.1:3000:80"
 
 volumes:
   db-data:
