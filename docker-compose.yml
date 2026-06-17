@@ -18,9 +18,9 @@ services:
       ADMIN_ID: ${ADMIN_ID}
       ADMIN_PW: ${ADMIN_PW}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
-    networks: [app-network]
-    ports:
-      - "8080:8080"
+      REDIS_HOST: redis
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: broker:29092
+    networks: [frontend_network, backend_network]
   db:
     image: postgres:17
     container_name: Db
@@ -28,13 +28,11 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
       # /docker-entrypoint-initdb.d/init.sql가 관례. ro는 ReadOnly 읽기모드
       - ./app/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    networks: [app-network]
+    networks: [backend_network]
     healthcheck:
       # pg_isready -U 유저명만 입력하면, Postgres는 기본적으로 유저명과 똑같은 이름의 데이터베이스에 접속을 시도
       # -d로 DB도 지정해줘야
@@ -45,11 +43,9 @@ services:
   redis:
     image: redis:7.2-alpine
     container_name: Redis
-    ports:
-      - "6379:6379"
     volumes:
       - redis-data:/data
-    networks: [app-network]
+    networks: [backend_network]
     command: redis-server --appendonly yes
   broker:
     image: apache/kafka:latest
@@ -73,21 +69,25 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
-    networks: [app-network]
+    networks: [backend_network]
 
 
   nginx:
     image: nginx:alpine
     container_name: Nginx
-    depends_on: [backend, db, redis, broker]
+    depends_on: [backend]
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/static:/usr/share/nginx/html:ro
+    networks: [frontend_network]
+    ports:
+      - "3000:80"
 
 volumes:
   db-data:
   redis-data:
 
 networks:
-  app-network:
+  frontend_network:
+  backend_network:
 
