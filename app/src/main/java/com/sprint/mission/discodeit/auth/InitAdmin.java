@@ -6,6 +6,7 @@ import com.sprint.mission.discodeit.dto.UserDto.UserRoleUpdateRequest;
 import com.sprint.mission.discodeit.entity.Role;
 import com.sprint.mission.discodeit.exception.user.DuplicateEmailException;
 import com.sprint.mission.discodeit.exception.user.DuplicateUsernameException;
+import com.sprint.mission.discodeit.redis.RedisLockProvider;
 import com.sprint.mission.discodeit.service.AuthService;
 import com.sprint.mission.discodeit.service.UserService;
 import java.util.List;
@@ -26,6 +27,7 @@ public class InitAdmin implements ApplicationRunner {
 
   private final UserService userService;
   private final AuthService authService;
+  private final RedisLockProvider redisLockProvider;
 
   @Value("${discodeit.admin.id}")
   private String adminId;
@@ -37,6 +39,9 @@ public class InitAdmin implements ApplicationRunner {
   @Override
   public void run(ApplicationArguments args) throws Exception {
 
+    String lockKey = "lock:init:admin";
+
+    redisLockProvider.acquireLock(lockKey);
     try {
       UserCreateRequest request = new UserCreateRequest(adminId, adminPw, adminEmail);
       UserDto adminDto = userService.createUser(request, null);
@@ -52,6 +57,8 @@ public class InitAdmin implements ApplicationRunner {
       log.warn("Admin이 이미 존재함");
     } catch (Exception e) {
       log.error("Admin 생성 중 오류");
+    } finally {
+      redisLockProvider.releaseLock(lockKey);
     }
   }
 }

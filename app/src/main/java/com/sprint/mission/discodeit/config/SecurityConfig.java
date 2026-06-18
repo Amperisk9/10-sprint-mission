@@ -8,10 +8,14 @@ import com.sprint.mission.discodeit.auth.jwt.JwtLoginSuccessHandler;
 import com.sprint.mission.discodeit.auth.jwt.JwtLogoutHandler;
 import com.sprint.mission.discodeit.auth.jwt.JwtRegistry;
 import com.sprint.mission.discodeit.auth.jwt.JwtTokenProvider;
+import com.sprint.mission.discodeit.auth.jwt.RedisJwtRegistry;
+import com.sprint.mission.discodeit.redis.RedisLockProvider;
 import jakarta.servlet.DispatcherType;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
@@ -118,7 +122,9 @@ public class SecurityConfig {
   }
 
   @Bean
-  public JwtRegistry getRegistry(JwtTokenProvider jwtTokenProvider) {
-    return new InMemoryJwtRegistry(jwtTokenProvider, 1);
+  public JwtRegistry getRegistry(JwtTokenProvider jwtTokenProvider,
+      RedisTemplate<String, Object> redisTemplate,
+      RedisLockProvider redisLockProvider) {
+    return new RedisJwtRegistry(1, jwtTokenProvider, redisTemplate, redisLockProvider);
   }
 }
