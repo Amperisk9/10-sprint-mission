@@ -54,6 +54,7 @@ dependencies {
     implementation 'com.nimbusds:nimbus-jose-jwt:10.3'                                // Jwt
 
     implementation 'org.springframework.boot:spring-boot-starter-websocket'           // WebSocket
+    implementation 'org.springframework.security:spring-security-messaging'           // WebSocketAuthorization
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
