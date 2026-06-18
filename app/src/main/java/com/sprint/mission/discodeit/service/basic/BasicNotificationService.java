@@ -87,6 +87,9 @@ public class BasicNotificationService implements NotificationService {
         "권한이 변경되었습니다",
         event.oldRole() + " -> " + event.newRole());
 
+    // 알림 이벤트 전송
+    sseService.send(List.of(event.userId()), SseMessageType.NOTIFICATION_CREATED.getValue(), notificationMapper.toDto(notification));
+
     notificationRepository.save(notification);
     log.info("notification [RoleUpdated] 생성");
   }
@@ -100,6 +103,12 @@ public class BasicNotificationService implements NotificationService {
     notificationRepository.saveAll(notifications);
     log.info("notification [BinaryContentUploadFailedEvent] 생성: notificationSize={}",
         notifications.size());
+
+    // 알림 이벤트 전송
+    notifications.stream()
+        .map(notificationMapper::toDto)
+        .forEach(dto -> sseService.send(List.of(dto.receiverId()),
+            SseMessageType.NOTIFICATION_CREATED.getValue(), dto));
 
     // 캐시삭제
     Optional.ofNullable(cacheManager.getCache(CacheNames.NOTIFICATIONS_BY_USER))

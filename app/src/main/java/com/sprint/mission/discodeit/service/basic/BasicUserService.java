@@ -65,7 +65,7 @@ public class BasicUserService implements UserService {
 
     // 사용자 갱신
     UserDto userDto = toDto(user);
-    sseService.send(List.of(user.getId()), SseMessageType.USERS_CREATED.getValue(), userDto);
+    sseService.broadcast(SseMessageType.USERS_CREATED.getValue(), userDto);
 
     log.info("[Service] 유저 생성 성공: id={}", user.getId());
     return userDto;
@@ -117,7 +117,7 @@ public class BasicUserService implements UserService {
 
     // 사용자 갱신
     UserDto userDto = toDto(user);
-    sseService.send(List.of(user.getId()), SseMessageType.USERS_UPDATED.getValue(), userDto);
+    sseService.broadcast(SseMessageType.USERS_UPDATED.getValue(), userDto);
 
     log.info("[Service] 유저 수정 성공: id={}", user.getId());
     return userDto;
@@ -134,7 +134,7 @@ public class BasicUserService implements UserService {
 
     // 사용자 갱신
     UserDto userDto = toDto(user);
-    sseService.send(List.of(user.getId()), SseMessageType.USERS_DELETED.getValue(), userDto);
+    sseService.broadcast(SseMessageType.USERS_DELETED.getValue(), userDto);
 
     userRepository.deleteById(uuid);
     log.info("[Service] 유저 삭제 성공: id={}", uuid);

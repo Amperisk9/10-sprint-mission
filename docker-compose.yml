@@ -21,6 +21,14 @@ services:
       REDIS_HOST: redis
       SPRING_KAFKA_BOOTSTRAP_SERVERS: broker:29092
     networks: [frontend_network, backend_network]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      broker:
+        condition: service_healthy
+
   db:
     image: postgres:17
     container_name: Db
@@ -40,6 +48,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   redis:
     image: redis:7.2-alpine
     container_name: Redis
@@ -47,12 +56,16 @@ services:
       - redis-data:/data
     networks: [backend_network]
     command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
   broker:
     image: apache/kafka:latest
     hostname: broker
     container_name: Broker
-    ports:
-      - "127.0.0.1:9092:9092"
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT
@@ -70,7 +83,11 @@ services:
       KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
       CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
     networks: [backend_network]
-
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-cluster.sh cluster-id --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   nginx:
     image: nginx:alpine

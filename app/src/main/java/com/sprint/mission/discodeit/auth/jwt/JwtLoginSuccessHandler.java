@@ -5,12 +5,19 @@ import com.sprint.mission.discodeit.auth.DiscodeitUserDetails;
 import com.sprint.mission.discodeit.auth.dto.JwtDto;
 import com.sprint.mission.discodeit.auth.dto.JwtInformation;
 import com.sprint.mission.discodeit.config.CacheConfig.CacheNames;
+import com.sprint.mission.discodeit.entity.User;
 import com.sprint.mission.discodeit.exception.ErrorResponse;
+import com.sprint.mission.discodeit.exception.user.UserNotFoundException;
+import com.sprint.mission.discodeit.mapper.UserMapper;
+import com.sprint.mission.discodeit.repository.UserRepository;
+import com.sprint.mission.discodeit.sse.SseMessageType;
+import com.sprint.mission.discodeit.sse.SseService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
@@ -30,6 +37,9 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
   private final JwtTokenProvider jwtTokenProvider;
   private final JwtRegistry jwtRegistry;
   private final CacheManager cacheManager;
+  private final SseService sseService;
+  private final UserRepository userRepository;
+  private final UserMapper userMapper;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -58,6 +68,12 @@ public class JwtLoginSuccessHandler implements AuthenticationSuccessHandler {
       // 캐시 삭제
       Optional.ofNullable(cacheManager.getCache(CacheNames.USER_CACHE))
           .ifPresent(Cache::clear);
+
+      // 로그인 상태 갱신
+      User user = userRepository.findById(userDetails.getUserDto().id())
+          .orElseThrow(() -> new UserNotFoundException());
+      sseService.broadcast(SseMessageType.USERS_UPDATED.getValue(), userMapper.toDto(user));
+
     } else {
       String errorMessage = "인증 객체 타입이 맞지 않습니다";
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
